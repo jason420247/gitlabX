@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 interface Navigation {
     companion object {
+
+        const val TAG = "NAVIGATION"
         private val mNext: MutableStateFlow<Destination<*>?> =
             MutableStateFlow(null)
         private val mPopUpTo: MutableStateFlow<PopUpTo<*>?> =
@@ -37,7 +39,7 @@ class PopUpTo<TData>(
     val popUpRoute: String? = null,
     val data: TData? = null,
     val inclusive: Boolean = true,
-    val launchSingleTop: Boolean = true
+    val launchSingleTop: Boolean = false
 ) {
     override fun toString(): String =
         "route: $route; popUpRoute: $popUpRoute; data: ${data != null}; inclusive: $inclusive; launchSingleTop: $launchSingleTop"

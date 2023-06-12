@@ -48,17 +48,18 @@ class MainActivity : ComponentActivity() {
             val popUp by remember { popUpState }
             if (destination != null) {
                 Navigation.next(null)
-                Log.i("navigation", "navigating to ${destination!!}")
+                Log.i(Navigation.TAG, "navigating to ${destination!!}")
                 navController.navigate(destination!!.route)
             }
             if (popUp != null) {
-                Log.i("navigation", "navigating to ${popUp!!}")
+                Log.i(Navigation.TAG, "navigating to ${popUp!!}")
                 navController.navigate(popUp!!.route) {
                     if (popUp!!.launchSingleTop) {
-                        Navigation.popUpTo(null)
                         launchSingleTop = popUp!!.launchSingleTop
+                        Navigation.popUpTo(null)
                         return@navigate
                     }
+                    Navigation.popUpTo(null)
                     popUpTo(requireNotNull(popUp!!.popUpRoute)) { inclusive = popUp!!.inclusive }
                 }
             }
