@@ -8,13 +8,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.AuthStateStore
+import com.sozonov.gitlabx.navigation.Destination
+import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.ui.screens.sign_in.SingInView
+import com.sozonov.gitlabx.ui.screens.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.ui.theme.GitlabXTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,12 +41,41 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val navController = rememberNavController()
+            val destinationsState = Navigation.next.collectAsState(null, Dispatchers.Main)
+            val popUpState = Navigation.popUpTo.collectAsState(null, Dispatchers.Main)
+            val destination by remember { destinationsState }
+            val popUp by remember { popUpState }
+            if (destination != null) {
+                Navigation.next(null)
+                Log.i("navigation", "navigating to ${destination!!}")
+                navController.navigate(destination!!.route)
+            }
+            if (popUp != null) {
+                Log.i("navigation", "navigating to ${popUp!!}")
+                navController.navigate(popUp!!.route) {
+                    if (popUp!!.launchSingleTop) {
+                        Navigation.popUpTo(null)
+                        launchSingleTop = popUp!!.launchSingleTop
+                        return@navigate
+                    }
+                    popUpTo(requireNotNull(popUp!!.popUpRoute)) { inclusive = popUp!!.inclusive }
+                }
+            }
             GitlabXTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    SingInView(
-                        doOnGitlabCloud = ::doAuthorization,
-                        doOnGitlabSelfManaged = ::doNavigationToSetupSelfManaged
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    NavHost(navController = navController, startDestination = Navigation.Routes.SIGN_IN) {
+                        composable(Navigation.Routes.SIGN_IN) {
+                            SingInView(
+                                doOnGitlabCloud = ::doAuthorization,
+                                doOnGitlabSelfManaged = ::doNavigationToSetupSelfManaged
+                            )
+                        }
+                        composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
+                    }
                 }
             }
         }
@@ -46,7 +86,11 @@ class MainActivity : ComponentActivity() {
         mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
     }
 
-    private fun doNavigationToSetupSelfManaged() {}
+    private fun doNavigationToSetupSelfManaged() {
+        lifecycleScope.launch {
+            Navigation.next(Destination<Unit>(Navigation.Routes.SELF_MANAGED_SIGN_IN))
+        }
+    }
 
     private fun registerForActivityAuthResult() = registerForActivityResult(StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
