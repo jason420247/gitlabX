@@ -19,7 +19,7 @@ class SelfManagedViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             // save
             withContext(Dispatchers.Main) {
-                Navigation.popUpTo(PopUpTo<Unit>(Navigation.Routes.SIGN_IN, popUpRoute = Navigation.Routes.SIGN_IN))
+                Navigation.route(PopUpTo<Unit>(Navigation.Routes.SIGN_IN, popUpRoute = Navigation.Routes.SIGN_IN))
             }
         }
 

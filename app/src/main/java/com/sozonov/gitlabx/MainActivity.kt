@@ -24,6 +24,7 @@ import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.AuthStateStore
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
+import com.sozonov.gitlabx.navigation.PopUpTo
 import com.sozonov.gitlabx.ui.screens.sign_in.SingInView
 import com.sozonov.gitlabx.ui.screens.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.ui.theme.GitlabXTheme
@@ -42,33 +43,43 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
-            val destinationsState = Navigation.next.collectAsState(null, Dispatchers.Main)
-            val popUpState = Navigation.popUpTo.collectAsState(null, Dispatchers.Main)
+            val destinationsState = Navigation.destination.collectAsState(null, Dispatchers.Main)
             val destination by remember { destinationsState }
-            val popUp by remember { popUpState }
             if (destination != null) {
-                Navigation.next(null)
-                Log.i(Navigation.TAG, "navigating to ${destination!!}")
-                navController.navigate(destination!!.route)
-            }
-            if (popUp != null) {
-                Log.i(Navigation.TAG, "navigating to ${popUp!!}")
-                navController.navigate(popUp!!.route) {
-                    if (popUp!!.launchSingleTop) {
-                        launchSingleTop = popUp!!.launchSingleTop
-                        Navigation.popUpTo(null)
-                        return@navigate
+                when (destination) {
+                    is Destination -> {
+                        val dest = destination as Destination<*>
+                        navController.navigate(dest.route)
+                        Log.i(Navigation.TAG, "navigating to $dest")
                     }
-                    Navigation.popUpTo(null)
-                    popUpTo(requireNotNull(popUp!!.popUpRoute)) { inclusive = popUp!!.inclusive }
+
+                    is PopUpTo -> {
+                        val popUp = destination as PopUpTo<*>
+                        navController.navigate(popUp.route) {
+                            if (popUp.launchSingleTop) {
+                                launchSingleTop = true
+                                return@navigate
+                            }
+                            popUpTo(requireNotNull(popUp.popUpRoute)) { inclusive = popUp.inclusive }
+                            Log.i(Navigation.TAG, "navigating to $popUp")
+                        }
+                    }
+
+                    else -> {
+                        throw IllegalArgumentException(destination!!::class.simpleName)
+                    }
                 }
             }
             GitlabXTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    NavHost(navController = navController, startDestination = Navigation.Routes.SIGN_IN) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = Navigation.Routes.SIGN_IN,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
                         composable(Navigation.Routes.SIGN_IN) {
                             SingInView(
                                 doOnGitlabCloud = ::doAuthorization,
@@ -89,7 +100,7 @@ class MainActivity : ComponentActivity() {
 
     private fun doNavigationToSetupSelfManaged() {
         lifecycleScope.launch {
-            Navigation.next(Destination<Unit>(Navigation.Routes.SELF_MANAGED_SIGN_IN))
+            Navigation.route(Destination<Unit>(Navigation.Routes.SELF_MANAGED_SIGN_IN))
         }
     }
 

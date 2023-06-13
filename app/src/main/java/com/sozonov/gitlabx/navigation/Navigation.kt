@@ -7,18 +7,12 @@ interface Navigation {
     companion object {
 
         const val TAG = "NAVIGATION"
-        private val mNext: MutableStateFlow<Destination<*>?> =
+        private val mDestination: MutableStateFlow<IDestination<*>?> =
             MutableStateFlow(null)
-        private val mPopUpTo: MutableStateFlow<PopUpTo<*>?> =
-            MutableStateFlow(null)
-        val next = mNext.asStateFlow()
-        val popUpTo = mPopUpTo.asStateFlow()
-        fun next(destination: Destination<*>?) {
-            mNext.tryEmit(destination)
-        }
 
-        fun popUpTo(popUpTo: PopUpTo<*>?) {
-            mPopUpTo.tryEmit(popUpTo)
+        val destination = mDestination.asStateFlow()
+        fun route(destination: IDestination<*>?) {
+            mDestination.tryEmit(destination)
         }
     }
 
@@ -28,19 +22,4 @@ interface Navigation {
             const val SELF_MANAGED_SIGN_IN = "SELF_MANAGED_SIGN_IN"
         }
     }
-}
-
-class Destination<TData>(val route: String, val data: TData? = null) {
-    override fun toString(): String = "route: $route; data: ${data != null}"
-}
-
-class PopUpTo<TData>(
-    val route: String,
-    val popUpRoute: String? = null,
-    val data: TData? = null,
-    val inclusive: Boolean = true,
-    val launchSingleTop: Boolean = false
-) {
-    override fun toString(): String =
-        "route: $route; popUpRoute: $popUpRoute; data: ${data != null}; inclusive: $inclusive; launchSingleTop: $launchSingleTop"
 }
