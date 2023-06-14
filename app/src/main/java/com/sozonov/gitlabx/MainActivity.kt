@@ -21,7 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sozonov.gitlabx.auth.AuthService
-import com.sozonov.gitlabx.auth.AuthStateStore
+import com.sozonov.gitlabx.auth.store.AuthStateStore
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.navigation.PopUpTo
@@ -39,6 +39,11 @@ class MainActivity : ComponentActivity() {
     private val mViewModel by viewModels<SignInViewModel>()
     private val mAuthResultLauncher = registerForActivityAuthResult()
     private val mStore by lazy { AuthStateStore.getInstance(this) }
+
+    companion object {
+        private const val AUTH_TAG = "auth"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -114,10 +119,10 @@ class MainActivity : ComponentActivity() {
                     mStore.handleResponse(resp, exc)
 
                     if (exc != null || resp == null) {
-                        Log.e("auth", exc?.message ?: "error", exc)
+                        Log.e(AUTH_TAG, exc?.message ?: "error", exc)
                         return@launch
                     }
-                    Log.i("auth", "auth response code saved")
+                    Log.i(AUTH_TAG, "auth response code saved")
                     mAuthService.performTokenRequest(
                         resp.createTokenExchangeRequest()
                     ) { responseToken, exc ->
@@ -127,10 +132,10 @@ class MainActivity : ComponentActivity() {
                                 mViewModel.changeGitlabCloudAuthProcessing(false)
                             }
                             if (exc != null || responseToken == null) {
-                                Log.e("auth", exc?.message ?: "error", exc)
+                                Log.e(AUTH_TAG, exc?.message ?: "error", exc)
                                 return@launch
                             }
-                            Log.i("auth", "auth tokens saved")
+                            Log.i(AUTH_TAG, "auth tokens saved")
                         }
                     }
                 }

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.10'
 }
 
 android {
@@ -57,4 +58,5 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
     implementation "androidx.navigation:navigation-compose:$compose_nav_version"
     implementation 'net.openid:appauth:0.11.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0'
 }

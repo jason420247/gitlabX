@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.auth
+package com.sozonov.gitlabx.auth.store
 
 import android.content.Context
 import android.util.Log
@@ -11,16 +11,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.TokenResponse
+import org.json.JSONException
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
 
 class AuthStateStore private constructor(private val context: Context) {
 
-    private val mCurrentState = AtomicReference<AuthState>()
+    private val mCurrentState = AtomicReference<IAuthState<*>>()
     private val Context.mPrefs: DataStore<Preferences> by preferencesDataStore(name = STORE_NAME)
     private val mMutex = Mutex()
 
@@ -49,7 +53,7 @@ class AuthStateStore private constructor(private val context: Context) {
         }
     }
 
-    suspend fun getCurrent(): AuthState {
+    suspend fun getCurrent(): IAuthState<*> {
         var state = mCurrentState.get()
         if (state != null) {
             return state
@@ -63,39 +67,57 @@ class AuthStateStore private constructor(private val context: Context) {
         return mCurrentState.get()
     }
 
-    private suspend fun replace(state: AuthState): AuthState {
+    private suspend fun replace(state: IAuthState<*>): IAuthState<*> {
         writeState(state)
         mCurrentState.set(state)
         return state
     }
 
     suspend fun handleResponse(response: AuthorizationResponse?, ex: AuthorizationException?): AuthState {
-        val current = getCurrent()
+        var current = (getCurrent() as? AuthStateAdapter)?.state
+        if (current == null) {
+            current = AuthState()
+        }
         current.update(response, ex)
-        return replace(current)
+        return (replace(AuthStateAdapter(current)) as AuthStateAdapter).state
     }
 
     suspend fun handleResponse(response: TokenResponse?, ex: AuthorizationException?): AuthState {
-        val current = getCurrent()
+        var current = (getCurrent() as? AuthStateAdapter)?.state
+        if (current == null) {
+            current = AuthState()
+        }
         current.update(response, ex)
-        return replace(current)
+        return (replace(AuthStateAdapter(current)) as AuthStateAdapter).state
     }
 
-    private suspend fun readState(): AuthState {
+    private suspend fun readState(): IAuthState<*> {
         return mMutex.withLock {
             try {
-                val currentState = context.mPrefs.data.map { preferences -> preferences[STORE_KEY] }.first()
-                    ?: return@withLock AuthState()
-                AuthState.jsonDeserialize(currentState)
+                val stateJson = context.mPrefs.data.map { preferences -> preferences[STORE_KEY] }.first()
+                    ?: return@withLock EmptyAuthState
+                try {
+                    return@withLock Json.decodeFromString<SelfManagedAuthState>(stateJson)
+                } catch (exc: SerializationException) {
+                    try {
+                        AuthStateAdapter(AuthState.jsonDeserialize(stateJson))
+                    } catch (exc: JSONException) {
+                        Log.e(TAG, exc.message, exc)
+                        EmptyAuthState
+                    }
+                } catch (exc: IllegalArgumentException) {
+                    Log.e(TAG, exc.message, exc)
+                    EmptyAuthState
+                }
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)
-                AuthState()
+                EmptyAuthState
             }
         }
     }
 
     @Throws(Exception::class)
-    private suspend fun writeState(state: AuthState?) {
+    private suspend fun writeState(state: IAuthState<*>?) {
         mMutex.withLock {
             try {
                 context.mPrefs.edit { settings ->
@@ -103,7 +125,7 @@ class AuthStateStore private constructor(private val context: Context) {
                         settings.remove(STORE_KEY)
                         return@edit
                     }
-                    settings[STORE_KEY] = state.jsonSerializeString()
+                    settings[STORE_KEY] = state.getJson()
                 }
 
             } catch (e: Exception) {

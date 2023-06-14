@@ -3,7 +3,7 @@ package com.sozonov.gitlabx.ui.screens.sign_in.self_managed
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sozonov.gitlabx.auth.SelfManagedAuthState
+import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.navigation.PopUpTo
 import kotlinx.coroutines.Dispatchers
