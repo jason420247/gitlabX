@@ -10,4 +10,13 @@ class SelfManagedAuthState(val server: String, val accessToken: String) : IAuthS
         get() = this
 
     override fun getJson(): String = Json.encodeToString(state)
+
+    init {
+        if (server.isBlank()) {
+            throw IllegalArgumentException("Server is empty")
+        }
+        if (accessToken.isBlank()) {
+            throw IllegalArgumentException("Access token is empty")
+        }
+    }
 }

@@ -9,7 +9,6 @@ class SignInViewModel : ViewModel() {
     private val _gitlabCloudAuthProcessing = mutableStateOf(false)
     val gitlabCloudAuthProcessing: State<Boolean> = _gitlabCloudAuthProcessing
 
-
     fun changeGitlabCloudAuthProcessing(state: Boolean) {
         _gitlabCloudAuthProcessing.value = state
     }

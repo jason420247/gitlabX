@@ -5,18 +5,21 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sozonov.gitlabx.SignInViewModel
 import com.sozonov.gitlabx.ui.theme.Typography
 import com.sozonov.gitlabx.utils.delegates.Action
 
 @Composable
-fun SingInView(doOnGitlabCloud: Action, doOnGitlabSelfManaged: Action, mainViewModel: SignInViewModel = viewModel()) {
+fun SingInView(
+    doOnGitlabCloud: Action,
+    doOnGitlabSelfManaged: Action,
+    gitlabCloudAuthProcessing: State<Boolean>
+) {
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -33,7 +36,7 @@ fun SingInView(doOnGitlabCloud: Action, doOnGitlabSelfManaged: Action, mainViewM
         Spacer(Modifier.height(24.dp))
 
         Column {
-            val gitlabCloudProcessing by remember { mainViewModel.gitlabCloudAuthProcessing }
+            val gitlabCloudProcessing by remember { gitlabCloudAuthProcessing }
             ElevatedButton(
                 onClick = doOnGitlabCloud,
                 modifier = Modifier.fillMaxWidth(0.7f),

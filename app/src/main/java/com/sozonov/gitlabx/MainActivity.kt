@@ -21,8 +21,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sozonov.gitlabx.auth.AuthService
-import com.sozonov.gitlabx.auth.store.AuthStateStore
+import com.sozonov.gitlabx.auth.AuthService.Companion.AUTH_TAG
 import com.sozonov.gitlabx.navigation.Destination
+import com.sozonov.gitlabx.navigation.IDestination.Companion.SelfManagedSignIn
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.navigation.PopUpTo
 import com.sozonov.gitlabx.ui.screens.sign_in.SingInView
@@ -33,17 +34,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
-    private val mAuthService by lazy { AuthService(this) }
-    private val mViewModel by viewModels<SignInViewModel>()
+    private val mAuthService by inject<AuthService>()
     private val mAuthResultLauncher = registerForActivityAuthResult()
-    private val mStore by lazy { AuthStateStore.getInstance(this) }
-
-    companion object {
-        private const val AUTH_TAG = "auth"
-    }
-
+    private val mViewModel by viewModels<SignInViewModel>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -88,7 +84,8 @@ class MainActivity : ComponentActivity() {
                         composable(Navigation.Routes.SIGN_IN) {
                             SingInView(
                                 doOnGitlabCloud = ::doAuthorization,
-                                doOnGitlabSelfManaged = ::doNavigationToSetupSelfManaged
+                                doOnGitlabSelfManaged = ::doNavigationToSetupSelfManaged,
+                                gitlabCloudAuthProcessing = mViewModel.gitlabCloudAuthProcessing
                             )
                         }
                         composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
@@ -105,7 +102,7 @@ class MainActivity : ComponentActivity() {
 
     private fun doNavigationToSetupSelfManaged() {
         lifecycleScope.launch {
-            Navigation.route(Destination<Unit>(Navigation.Routes.SELF_MANAGED_SIGN_IN))
+            Navigation.route(SelfManagedSignIn)
         }
     }
 
@@ -116,7 +113,7 @@ class MainActivity : ComponentActivity() {
                 val resp = AuthorizationResponse.fromIntent(data)
                 val exc = AuthorizationException.fromIntent(data)
                 lifecycleScope.launch(Dispatchers.IO) {
-                    mStore.handleResponse(resp, exc)
+                    mAuthService.store.handleResponse(resp, exc)
 
                     if (exc != null || resp == null) {
                         Log.e(AUTH_TAG, exc?.message ?: "error", exc)
@@ -127,7 +124,7 @@ class MainActivity : ComponentActivity() {
                         resp.createTokenExchangeRequest()
                     ) { responseToken, exc ->
                         lifecycleScope.launch(Dispatchers.IO) {
-                            mStore.handleResponse(responseToken, exc)
+                            mAuthService.store.handleResponse(responseToken, exc)
                             withContext(Dispatchers.Main) {
                                 mViewModel.changeGitlabCloudAuthProcessing(false)
                             }

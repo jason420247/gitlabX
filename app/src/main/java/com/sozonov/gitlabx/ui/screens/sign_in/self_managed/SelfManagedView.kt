@@ -11,10 +11,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SelfManagedView(viewModel: SelfManagedViewModel = viewModel()) {
+fun SelfManagedView(viewModel: SelfManagedViewModel = koinViewModel()) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         var server by remember { viewModel.server }
         var accessToken by remember { viewModel.accessToken }
@@ -62,7 +62,7 @@ fun SelfManagedView(viewModel: SelfManagedViewModel = viewModel()) {
             keyboardActions = KeyboardActions(onDone = { viewModel.saveAuthState() })
         )
         Spacer(modifier = Modifier.height(24.dp))
-        OutlinedButton(onClick = viewModel::saveAuthState) {
+        OutlinedButton(onClick = viewModel::saveAuthState, enabled = server.isNotBlank() && accessToken.isNotBlank()) {
             Text("Save")
         }
     }

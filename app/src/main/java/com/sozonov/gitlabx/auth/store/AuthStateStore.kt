@@ -9,8 +9,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -26,7 +24,6 @@ class AuthStateStore private constructor(private val context: Context) {
 
     private val mCurrentState = AtomicReference<IAuthState<*>>()
     private val Context.mPrefs: DataStore<Preferences> by preferencesDataStore(name = STORE_NAME)
-    private val mMutex = Mutex()
 
     companion object {
 
@@ -67,12 +64,6 @@ class AuthStateStore private constructor(private val context: Context) {
         return mCurrentState.get()
     }
 
-    private suspend fun replace(state: IAuthState<*>): IAuthState<*> {
-        writeState(state)
-        mCurrentState.set(state)
-        return state
-    }
-
     suspend fun handleResponse(response: AuthorizationResponse?, ex: AuthorizationException?): AuthState {
         var current = (getCurrent() as? AuthStateAdapter)?.state
         if (current == null) {
@@ -91,47 +82,54 @@ class AuthStateStore private constructor(private val context: Context) {
         return (replace(AuthStateAdapter(current)) as AuthStateAdapter).state
     }
 
+    suspend fun clear() {
+        writeState(null)
+        mCurrentState.set(null)
+    }
+
+    suspend fun replace(state: IAuthState<*>): IAuthState<*> {
+        writeState(state)
+        mCurrentState.set(state)
+        return state
+    }
+
     private suspend fun readState(): IAuthState<*> {
-        return mMutex.withLock {
-            try {
-                val stateJson = context.mPrefs.data.map { preferences -> preferences[STORE_KEY] }.first()
-                    ?: return@withLock EmptyAuthState
+        try {
+            val stateJson = context.mPrefs.data.map { preferences -> preferences[STORE_KEY] }.first()
+                ?: return EmptyAuthState
+            return try {
+                Json.decodeFromString<SelfManagedAuthState>(stateJson)
+            } catch (exc: SerializationException) {
                 try {
-                    return@withLock Json.decodeFromString<SelfManagedAuthState>(stateJson)
-                } catch (exc: SerializationException) {
-                    try {
-                        AuthStateAdapter(AuthState.jsonDeserialize(stateJson))
-                    } catch (exc: JSONException) {
-                        Log.e(TAG, exc.message, exc)
-                        EmptyAuthState
-                    }
-                } catch (exc: IllegalArgumentException) {
+                    AuthStateAdapter(AuthState.jsonDeserialize(stateJson))
+                } catch (exc: JSONException) {
                     Log.e(TAG, exc.message, exc)
                     EmptyAuthState
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, e.message, e)
+            } catch (exc: IllegalArgumentException) {
+                Log.e(TAG, exc.message, exc)
                 EmptyAuthState
             }
+        } catch (e: Exception) {
+            Log.e(TAG, e.message, e)
+            return EmptyAuthState
         }
     }
 
     @Throws(Exception::class)
     private suspend fun writeState(state: IAuthState<*>?) {
-        mMutex.withLock {
-            try {
-                context.mPrefs.edit { settings ->
-                    if (state == null) {
-                        settings.remove(STORE_KEY)
-                        return@edit
-                    }
-                    settings[STORE_KEY] = state.getJson()
+        try {
+            context.mPrefs.edit { settings ->
+                if (state == null) {
+                    settings.remove(STORE_KEY)
+                    return@edit
                 }
-
-            } catch (e: Exception) {
-                Log.e(TAG, e.message, e)
-                throw e
+                settings[STORE_KEY] = state.getJson()
             }
+
+        } catch (e: Exception) {
+            Log.e(TAG, e.message, e)
+            throw e
         }
     }
 }
