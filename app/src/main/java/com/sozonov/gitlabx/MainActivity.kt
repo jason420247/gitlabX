@@ -112,25 +112,25 @@ class MainActivity : ComponentActivity() {
             data?.run {
                 val resp = AuthorizationResponse.fromIntent(data)
                 val exc = AuthorizationException.fromIntent(data)
-                lifecycleScope.launch(Dispatchers.IO) {
+                lifecycleScope.launch(Dispatchers.IO) Code@{
                     mAuthService.store.handleResponse(resp, exc)
 
                     if (exc != null || resp == null) {
                         Log.e(AUTH_TAG, exc?.message ?: "error", exc)
-                        return@launch
+                        return@Code
                     }
                     Log.i(AUTH_TAG, "auth response code saved")
                     mAuthService.performTokenRequest(
                         resp.createTokenExchangeRequest()
                     ) { responseToken, exc ->
-                        lifecycleScope.launch(Dispatchers.IO) {
+                        lifecycleScope.launch(Dispatchers.IO) Token@{
                             mAuthService.store.handleResponse(responseToken, exc)
                             withContext(Dispatchers.Main) {
                                 mViewModel.changeGitlabCloudAuthProcessing(false)
                             }
                             if (exc != null || responseToken == null) {
                                 Log.e(AUTH_TAG, exc?.message ?: "error", exc)
-                                return@launch
+                                return@Token
                             }
                             Log.i(AUTH_TAG, "auth tokens saved")
                         }
