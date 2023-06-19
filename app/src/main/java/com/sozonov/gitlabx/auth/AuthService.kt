@@ -18,8 +18,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.openid.appauth.*
 
-typealias ActionWithValidToken = suspend (token: String) -> Boolean
-
 class AuthService(context: Context) : AuthorizationService(context) {
     val store = AuthStateStore.getInstance(context.applicationContext)
     private val serviceConfig = AuthorizationServiceConfiguration(
@@ -42,21 +40,21 @@ class AuthService(context: Context) : AuthorizationService(context) {
         const val AUTH_TAG = "auth"
 
         @JvmStatic
-        private suspend fun AuthService.performActionWithFreshTokens(
+        private suspend fun <TResult> AuthService.performActionWithFreshTokens(
             authState: AuthState,
-            producer: ProducerScope<Boolean>,
-            action: ActionWithValidToken
+            producer: ProducerScope<TResult?>,
+            action: suspend (token: String) -> TResult
         ) {
             authState.performActionWithFreshTokens(this) Refresh@{ accessToken,
                                                                    _,
                                                                    exc ->
                 if (exc != null) {
-                    producer.trySend(false)
+                    producer.trySend(null)
                     Log.e(AUTH_TAG, exc.message ?: "error", exc)
                     return@Refresh
                 }
                 if (accessToken == null) {
-                    producer.trySend(false)
+                    producer.trySend(null)
                     Log.e(AUTH_TAG, "Access token is empty")
                     return@Refresh
                 }
@@ -67,18 +65,18 @@ class AuthService(context: Context) : AuthorizationService(context) {
         }
     }
 
-    suspend fun performWithActualToken(action: ActionWithValidToken): Boolean {
+    suspend fun <TResult> performWithActualToken(action: suspend (token: String) -> TResult): TResult? {
         val state = getState()
 
         if (state is EmptyAuthState) {
-            return false
+            return null
         }
 
         if (state is AuthStateAdapter) {
             val authState = state.state
             if (!authState.needsTokenRefresh) {
                 if (authState.accessToken == null) {
-                    return false
+                    return null
                 }
                 return action.invoke(authState.accessToken!!)
             }
@@ -92,9 +90,8 @@ class AuthService(context: Context) : AuthorizationService(context) {
             return action.invoke(state.accessToken)
         }
 
-        return false
+        return null
     }
-
 
     suspend fun logout() {
         when (getState()) {
