@@ -10,7 +10,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
@@ -96,23 +95,23 @@ class AuthStateStore private constructor(private val context: Context) {
     private suspend fun readState(): IAuthState<*> {
         try {
             val stateJson = context.mPrefs.data.map { preferences -> preferences[STORE_KEY] }.first()
-                ?: return EmptyAuthState
+                ?: return AuthStateAdapter(AuthState())
             return try {
                 Json.decodeFromString<SelfManagedAuthState>(stateJson)
             } catch (exc: SerializationException) {
                 try {
-                    AuthStateAdapter(AuthState.jsonDeserialize(stateJson))
+                    return AuthStateAdapter(AuthState.jsonDeserialize(stateJson))
                 } catch (exc: JSONException) {
                     Log.e(TAG, exc.message, exc)
-                    EmptyAuthState
+                    return AuthStateAdapter(AuthState())
                 }
             } catch (exc: IllegalArgumentException) {
                 Log.e(TAG, exc.message, exc)
-                EmptyAuthState
+                return AuthStateAdapter(AuthState())
             }
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
-            return EmptyAuthState
+            return AuthStateAdapter(AuthState())
         }
     }
 

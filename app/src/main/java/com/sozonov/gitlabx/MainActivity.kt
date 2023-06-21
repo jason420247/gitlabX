@@ -26,9 +26,11 @@ import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.IDestination.Companion.SelfManagedSignIn
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.navigation.PopUpTo
+import com.sozonov.gitlabx.ui.screens.sign_in.SignInViewModel
 import com.sozonov.gitlabx.ui.screens.sign_in.SingInView
 import com.sozonov.gitlabx.ui.screens.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.ui.theme.GitlabXTheme
+import com.sozonov.gitlabx.user.IUserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,6 +42,7 @@ class MainActivity : ComponentActivity() {
     private val mAuthService by inject<AuthService>()
     private val mAuthResultLauncher = registerForActivityAuthResult()
     private val mViewModel by viewModels<SignInViewModel>()
+    private val userRepository by inject<IUserRepository>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -133,6 +136,8 @@ class MainActivity : ComponentActivity() {
                                 return@Token
                             }
                             Log.i(AUTH_TAG, "auth tokens saved")
+                            val user = userRepository.getUser(1)
+                            Log.i("USER", user.toString())
                         }
                     }
                 }

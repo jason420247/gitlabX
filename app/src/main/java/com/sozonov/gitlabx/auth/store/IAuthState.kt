@@ -5,10 +5,3 @@ sealed interface IAuthState<TState> {
     fun getJson(): String
 
 }
-
-object EmptyAuthState : IAuthState<Unit> {
-    override val state: Unit
-        get() = Unit
-
-    override fun getJson(): String = ""
-}

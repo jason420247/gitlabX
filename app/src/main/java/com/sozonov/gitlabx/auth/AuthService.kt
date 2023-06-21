@@ -7,7 +7,10 @@ import android.util.Log
 import com.sozonov.gitlabx.auth.AuthConstants.Companion.CLIENT_ID
 import com.sozonov.gitlabx.auth.AuthConstants.Companion.ENDPOINT
 import com.sozonov.gitlabx.auth.AuthConstants.Companion.REDIRECT_URI
-import com.sozonov.gitlabx.auth.store.*
+import com.sozonov.gitlabx.auth.store.AuthStateAdapter
+import com.sozonov.gitlabx.auth.store.AuthStateStore
+import com.sozonov.gitlabx.auth.store.IAuthState
+import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
 import com.sozonov.gitlabx.navigation.IDestination
 import com.sozonov.gitlabx.navigation.Navigation
 import kotlinx.coroutines.Dispatchers
@@ -68,10 +71,6 @@ class AuthService(context: Context) : AuthorizationService(context) {
     suspend fun <TResult> performWithActualToken(action: suspend (token: String) -> TResult): TResult? {
         val state = getState()
 
-        if (state is EmptyAuthState) {
-            return null
-        }
-
         if (state is AuthStateAdapter) {
             val authState = state.state
             if (!authState.needsTokenRefresh) {
@@ -104,8 +103,6 @@ class AuthService(context: Context) : AuthorizationService(context) {
                 store.clear()
                 Navigation.route(IDestination.SignInPopUp)
             }
-
-            EmptyAuthState -> return
         }
     }
 

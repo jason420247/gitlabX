@@ -4,19 +4,27 @@ import com.sozonov.gitlabx.auth.AuthService
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 val httpClient = module {
     single {
         val authService = AuthService(get())
         val client = HttpClient(CIO) {
-            install(ContentNegotiation) { json() }
             expectSuccess = true
+            install(ContentNegotiation) {
+                json(json = Json {
+                    isLenient = true
+                    ignoreUnknownKeys = true
+                    prettyPrint = true
+                })
+            }
             HttpResponseValidator {
                 handleResponseExceptionWithRequest { exception, _ ->
                     val clientException =
@@ -27,21 +35,25 @@ val httpClient = module {
                     }
                 }
             }
+            install(Auth) {
+                bearer {
+                    loadTokens {
+                        authService.performWithActualToken { token ->
+                            BearerTokens(token, "")
+                        }
+                    }
+                }
+            }
             install(HttpRequestRetry) {
                 retryIf { _, response ->
-                    !response.status.isSuccess() || response.status != HttpStatusCode.Unauthorized || response.status != HttpStatusCode.NotFound
+                    !response.status.isSuccess() || response.status != HttpStatusCode.NotFound || response.status != HttpStatusCode.Unauthorized
                 }
                 exponentialDelay()
             }
-            install(Logging)
-        }
-        client.plugin(HttpSend).intercept { request ->
-            val original = execute(request)
-            val result = authService.performWithActualToken { token ->
-                request.bearerAuth(token)
-                execute(request)
+            install(Logging) {
+                logger = Logger.ANDROID
+                level = LogLevel.ALL
             }
-            result ?: original
         }
         client
     }

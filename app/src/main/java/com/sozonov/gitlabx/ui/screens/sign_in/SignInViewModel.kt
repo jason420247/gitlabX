@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx
+package com.sozonov.gitlabx.ui.screens.sign_in
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf

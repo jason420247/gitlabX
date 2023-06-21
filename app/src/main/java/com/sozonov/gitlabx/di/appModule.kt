@@ -8,4 +8,5 @@ import org.koin.dsl.module
 val appModule = module {
     single { AuthService(get()) }
     viewModel { SelfManagedViewModel(get()) }
+    includes(userModule)
 }
