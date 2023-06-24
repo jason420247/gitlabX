@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -33,15 +32,15 @@ import com.sozonov.gitlabx.ui.theme.GitlabXTheme
 import com.sozonov.gitlabx.user.IUserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
     private val mAuthService by inject<AuthService>()
     private val mAuthResultLauncher = registerForActivityAuthResult()
-    private val mViewModel by viewModels<SignInViewModel>()
+    private val mViewModel by viewModel<SignInViewModel>()
     private val userRepository by inject<IUserRepository>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,16 +127,12 @@ class MainActivity : ComponentActivity() {
                     ) { responseToken, exc ->
                         lifecycleScope.launch(Dispatchers.IO) Token@{
                             mAuthService.store.handleResponse(responseToken, exc)
-                            withContext(Dispatchers.Main) {
-                                mViewModel.changeGitlabCloudAuthProcessing(false)
-                            }
                             if (exc != null || responseToken == null) {
                                 Log.e(AUTH_TAG, exc?.message ?: "error", exc)
                                 return@Token
                             }
                             Log.i(AUTH_TAG, "auth tokens saved")
-                            val user = userRepository.getUser(1)
-                            Log.i("USER", user.toString())
+                            mViewModel.fetchUserAndGoToWelcomeView()
                         }
                     }
                 }

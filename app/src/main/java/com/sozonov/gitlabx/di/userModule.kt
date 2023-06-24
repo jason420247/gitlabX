@@ -7,6 +7,6 @@ import com.sozonov.gitlabx.user.UserRepositoryImpl
 import org.koin.dsl.module
 
 val userModule = module {
-    single<IUserCache> { UserCacheImpl() }
+    single<IUserCache> { UserCacheImpl(get()) }
     single<IUserRepository> { UserRepositoryImpl(get(), get(), get()) }
 }

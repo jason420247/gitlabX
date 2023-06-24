@@ -2,7 +2,7 @@ package com.sozonov.gitlabx.di
 
 import com.sozonov.gitlabx.auth.AuthService
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.android.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
@@ -14,9 +14,10 @@ import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 val httpClient = module {
+
     single {
-        val authService = AuthService(get())
-        val client = HttpClient(CIO) {
+        val authService = get<AuthService>()
+        val client = HttpClient(Android) {
             expectSuccess = true
             install(ContentNegotiation) {
                 json(json = Json {
@@ -46,13 +47,19 @@ val httpClient = module {
             }
             install(HttpRequestRetry) {
                 retryIf { _, response ->
-                    !response.status.isSuccess() || response.status != HttpStatusCode.NotFound || response.status != HttpStatusCode.Unauthorized
+                    if (response.status.isSuccess()) {
+                        return@retryIf false
+                    }
+                    if (response.status == HttpStatusCode.NotFound || response.status == HttpStatusCode.Unauthorized) {
+                        return@retryIf false
+                    }
+                    true
                 }
                 exponentialDelay()
             }
             install(Logging) {
                 logger = Logger.ANDROID
-                level = LogLevel.ALL
+                level = LogLevel.BODY
             }
         }
         client

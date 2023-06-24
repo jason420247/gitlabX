@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class UserModel(
     val id: Int,
     val username: String,
-    val name: String,
+    @SerialName("name")
+    val fullName: String,
     @SerialName("avatar_url")
     val avatarUrl: String,
     @SerialName("public_email")

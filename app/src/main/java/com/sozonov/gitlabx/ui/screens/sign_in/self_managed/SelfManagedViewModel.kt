@@ -6,13 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
-import com.sozonov.gitlabx.navigation.IDestination.Companion.SignInPopUp
 import com.sozonov.gitlabx.navigation.Navigation
+import com.sozonov.gitlabx.navigation.PopUpTo
+import com.sozonov.gitlabx.user.IUserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-class SelfManagedViewModel(private val mAuthService: AuthService) : ViewModel() {
+class SelfManagedViewModel(private val mAuthService: AuthService, private val userRepository: IUserRepository) :
+    ViewModel() {
 
     var server = mutableStateOf("")
     var accessToken = mutableStateOf("")
@@ -23,12 +24,15 @@ class SelfManagedViewModel(private val mAuthService: AuthService) : ViewModel() 
                 val state = SelfManagedAuthState(server.value, accessToken.value)
                 mAuthService.saveState(state)
                 Log.i(AuthService.AUTH_TAG, "auth tokens saved")
-                withContext(Dispatchers.Main) {
-                    Navigation.route(SignInPopUp)
-                }
+                fetchUserAndGoToWelcomeView()
             } catch (e: Exception) {
                 Log.e(AuthService.AUTH_TAG, e.message, e)
             }
         }
+    }
+
+    private suspend fun fetchUserAndGoToWelcomeView() {
+        userRepository.fetchUser()
+        Navigation.route(PopUpTo<Unit>(Navigation.Routes.WELCOME))
     }
 }

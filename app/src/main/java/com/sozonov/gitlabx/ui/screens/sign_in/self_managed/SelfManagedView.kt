@@ -14,7 +14,9 @@ import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SelfManagedView(viewModel: SelfManagedViewModel = koinViewModel()) {
+fun SelfManagedView(
+    viewModel: SelfManagedViewModel = koinViewModel()
+) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         var server by remember { viewModel.server }
         var accessToken by remember { viewModel.accessToken }

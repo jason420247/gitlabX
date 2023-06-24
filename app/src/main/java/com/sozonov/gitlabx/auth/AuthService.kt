@@ -13,6 +13,7 @@ import com.sozonov.gitlabx.auth.store.IAuthState
 import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
 import com.sozonov.gitlabx.navigation.IDestination
 import com.sozonov.gitlabx.navigation.Navigation
+import com.sozonov.gitlabx.user.IUserCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.callbackFlow
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.openid.appauth.*
 
-class AuthService(context: Context) : AuthorizationService(context) {
+class AuthService(context: Context, private val userCache: IUserCache) : AuthorizationService(context) {
     val store = AuthStateStore.getInstance(context.applicationContext)
     private val serviceConfig = AuthorizationServiceConfiguration(
         Uri.parse("${ENDPOINT}authorize"),
@@ -96,14 +97,14 @@ class AuthService(context: Context) : AuthorizationService(context) {
         when (getState()) {
             is SelfManagedAuthState -> {
                 store.clear()
-                Navigation.route(IDestination.SignInPopUp)
             }
 
             is AuthStateAdapter -> {
                 store.clear()
-                Navigation.route(IDestination.SignInPopUp)
             }
         }
+        userCache.deleteUser()
+        Navigation.route(IDestination.SignInPopUp)
     }
 
     fun provideAuthIntent(): Intent = getAuthorizationRequestIntent(authRequest)
