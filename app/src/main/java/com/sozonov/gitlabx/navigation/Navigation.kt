@@ -1,19 +1,17 @@
 package com.sozonov.gitlabx.navigation
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.neverEqualPolicy
+import androidx.compose.runtime.referentialEqualityPolicy
+import androidx.compose.runtime.setValue
 
 interface Navigation {
     companion object {
 
         const val TAG = "NAVIGATION"
-        private val mDestination: MutableStateFlow<IDestination<*>?> =
-            MutableStateFlow(null)
 
-        val destination = mDestination.asStateFlow()
-        fun route(destination: IDestination<*>?) {
-            mDestination.tryEmit(destination)
-        }
+        var destination by mutableStateOf<Destination?>(null, policy = neverEqualPolicy())
     }
 
     interface Routes {

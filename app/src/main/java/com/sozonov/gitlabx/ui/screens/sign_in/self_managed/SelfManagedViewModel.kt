@@ -6,13 +6,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
+import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
-import com.sozonov.gitlabx.navigation.PopUpTo
 import com.sozonov.gitlabx.user.IUserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class SelfManagedViewModel(private val mAuthService: AuthService, private val userRepository: IUserRepository) :
+class SelfManagedViewModel(
+    private val mAuthService: AuthService,
+    private val userRepository: IUserRepository
+) :
     ViewModel() {
 
     var server = mutableStateOf("")
@@ -33,6 +36,6 @@ class SelfManagedViewModel(private val mAuthService: AuthService, private val us
 
     private suspend fun fetchUserAndGoToWelcomeView() {
         userRepository.fetchUser()
-        Navigation.route(PopUpTo<Unit>(Navigation.Routes.WELCOME))
+        Navigation.destination = Destination(Navigation.Routes.WELCOME, true)
     }
 }

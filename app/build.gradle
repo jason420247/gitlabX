@@ -39,7 +39,9 @@ android {
         jvmTarget = '1.8'
     }
     packagingOptions {
-        exclude("META-INF/INDEX.LIST")
+        resources {
+            excludes += ['META-INF/INDEX.LIST']
+        }
     }
     android.defaultConfig.manifestPlaceholders = [
             'appAuthRedirectScheme': 'com.sozonov.gitlabx'

@@ -11,7 +11,7 @@ import com.sozonov.gitlabx.auth.store.AuthStateAdapter
 import com.sozonov.gitlabx.auth.store.AuthStateStore
 import com.sozonov.gitlabx.auth.store.IAuthState
 import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
-import com.sozonov.gitlabx.navigation.IDestination
+import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.user.IUserCache
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.openid.appauth.*
 
-class AuthService(context: Context, private val userCache: IUserCache) : AuthorizationService(context) {
+class AuthService(context: Context, private val userCache: IUserCache) :
+    AuthorizationService(context) {
     val store = AuthStateStore.getInstance(context.applicationContext)
     private val serviceConfig = AuthorizationServiceConfiguration(
         Uri.parse("${ENDPOINT}authorize"),
@@ -35,7 +36,8 @@ class AuthService(context: Context, private val userCache: IUserCache) : Authori
         Uri.parse(REDIRECT_URI)
     )
 
-    private val authRequest = authRequestBuilder.setScopes("openid", "email", "profile", "api", "read_user").build()
+    private val authRequest =
+        authRequestBuilder.setScopes("openid", "email", "profile", "api", "read_user").build()
 
     suspend fun getState() = withContext(Dispatchers.IO) { store.getCurrent() }
     suspend fun saveState(state: IAuthState<*>) = store.replace(state)
@@ -104,7 +106,7 @@ class AuthService(context: Context, private val userCache: IUserCache) : Authori
             }
         }
         userCache.deleteUser()
-        Navigation.route(IDestination.SignInPopUp)
+        Navigation.destination = Destination(Navigation.Routes.SIGN_IN, popUpRoute = true)
     }
 
     fun provideAuthIntent(): Intent = getAuthorizationRequestIntent(authRequest)

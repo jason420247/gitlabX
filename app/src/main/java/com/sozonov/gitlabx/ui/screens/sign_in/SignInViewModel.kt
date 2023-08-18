@@ -1,32 +1,34 @@
 package com.sozonov.gitlabx.ui.screens.sign_in
 
-import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sozonov.gitlabx.navigation.Navigation
-import com.sozonov.gitlabx.navigation.PopUpTo
 import com.sozonov.gitlabx.user.IUserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class SignInViewModel(private val userRepository: IUserRepository) : ViewModel() {
+    var userState by mutableStateOf(UserState())
+        private set;
 
-    private val _gitlabCloudAuthProcessing = mutableStateOf(false)
-    val gitlabCloudAuthProcessing: State<Boolean> = _gitlabCloudAuthProcessing
-
-    fun changeGitlabCloudAuthProcessing(state: Boolean) {
-        _gitlabCloudAuthProcessing.value = state
-    }
-
-    fun fetchUserAndGoToWelcomeView() {
+    fun fetchUser() {
         viewModelScope.launch(Dispatchers.IO) {
-            userRepository.fetchUser()
-            withContext(Dispatchers.Main) {
-                changeGitlabCloudAuthProcessing(false)
+            try {
+                val user = userRepository.fetchUser()
+                withContext(Dispatchers.Main) {
+                    userState = UserState(user.id);
+                }
+            } catch (e: Exception) {
+                userState = UserState(errorMessage = e.message)
             }
-            Navigation.route(PopUpTo<Unit>(Navigation.Routes.WELCOME))
         }
     }
+
+    fun produceUserError(error: String) {
+        userState = UserState(null, error)
+    }
 }
+
