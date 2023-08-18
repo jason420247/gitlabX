@@ -9,16 +9,19 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -28,12 +31,14 @@ import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.AuthService.Companion.AUTH_TAG
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
-import com.sozonov.gitlabx.ui.screens.sign_in.SignInViewModel
-import com.sozonov.gitlabx.ui.screens.sign_in.SingInView
+import com.sozonov.gitlabx.snackbar.Snackbar
+import com.sozonov.gitlabx.snackbar.SnackbarData
+import com.sozonov.gitlabx.ui.screens.sign_in.cloud.CloudSignInViewModel
+import com.sozonov.gitlabx.ui.screens.sign_in.cloud.SingInView
 import com.sozonov.gitlabx.ui.screens.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.ui.theme.GitlabXTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -43,7 +48,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MainActivity : ComponentActivity() {
     private val mAuthService by inject<AuthService>()
     private val mAuthResultLauncher = registerForActivityAuthResult()
-    private val signInViewModel by viewModel<SignInViewModel>()
+    private val signInViewModel by viewModel<CloudSignInViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,45 +88,66 @@ class MainActivity : ComponentActivity() {
                     .flowWithLifecycle(lifecycle)
                     .collect { user ->
                         if (user.id != null || user.errorMessage != null) {
-                            gitlabCloudAuthProcessing = false;
+                            gitlabCloudAuthProcessing = false
                             if (user.errorMessage == null) {
                                 checkNotNull(user.id)
-                                Navigation.destination = Destination(Navigation.Routes.WELCOME, true)
+                                Navigation.destination =
+                                    Destination(Navigation.Routes.WELCOME, true)
                                 return@collect
                             }
-                            // show snackbar!! TODO
+                            Snackbar.show = SnackbarData(user.errorMessage)
                         }
                     }
             }
             GitlabXTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    NavHost(
-                        navController = navController,
-                        startDestination = Navigation.Routes.SIGN_IN,
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        composable(Navigation.Routes.SIGN_IN) {
-                            fun doAuthorization() {
-                                gitlabCloudAuthProcessing = true
-                                mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
-                            }
+                val snackbarHostState = remember { SnackbarHostState() }
 
-                            fun doNavigationToSetupSelfManaged() {
-                                lifecycleScope.launch {
-                                    Navigation.destination =
-                                        Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
-                                }
+                LaunchedEffect(lifecycle) {
+                    snapshotFlow { Snackbar.show }.flowWithLifecycle(lifecycle)
+                        .distinctUntilChanged().collect { data ->
+                            if (data != null) {
+                                snackbarHostState.showSnackbar(
+                                    message = data.message,
+                                    duration = data.duration
+                                )
                             }
-                            SingInView(
-                                doOnGitlabCloud = ::doAuthorization,
-                                doOnGitlabSelfManaged = ::doNavigationToSetupSelfManaged,
-                                gitlabCloudAuthProcessing = gitlabCloudAuthProcessing
-                            )
                         }
-                        composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
+                }
+                Scaffold(
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackbarHostState)
+                    }
+                ) { padding ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = Navigation.Routes.SIGN_IN
+                        ) {
+                            composable(Navigation.Routes.SIGN_IN) {
+                                fun doAuthorization() {
+                                    gitlabCloudAuthProcessing = true
+                                    mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
+                                }
+
+                                fun doNavigationToSetupSelfManaged() {
+                                    lifecycleScope.launch {
+                                        Navigation.destination =
+                                            Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
+                                    }
+                                }
+                                SingInView(
+                                    doOnGitlabCloud = ::doAuthorization,
+                                    doOnGitlabSelfManaged = ::doNavigationToSetupSelfManaged,
+                                    gitlabCloudAuthProcessing = gitlabCloudAuthProcessing
+                                )
+                            }
+                            composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
+                        }
                     }
                 }
             }
@@ -130,10 +156,11 @@ class MainActivity : ComponentActivity() {
 
     private fun registerForActivityAuthResult() =
         registerForActivityResult(StartActivityForResult()) { result ->
-            when(result.resultCode){
-                Activity.RESULT_CANCELED ->{
+            when (result.resultCode) {
+                Activity.RESULT_CANCELED -> {
                     signInViewModel.produceUserError("Request cancelled")
                 }
+
                 Activity.RESULT_OK -> {
                     val data = result.data
                     data?.run {
@@ -164,6 +191,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+
                 else -> {
                     Log.wtf(AUTH_TAG, "unknown code response")
                 }

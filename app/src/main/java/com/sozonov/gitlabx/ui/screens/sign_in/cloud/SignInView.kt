@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.screens.sign_in
+package com.sozonov.gitlabx.ui.screens.sign_in.cloud
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
