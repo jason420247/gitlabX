@@ -7,8 +7,8 @@ import android.util.Log
 import com.sozonov.gitlabx.auth.AuthConstants.Companion.CLIENT_ID
 import com.sozonov.gitlabx.auth.AuthConstants.Companion.ENDPOINT
 import com.sozonov.gitlabx.auth.AuthConstants.Companion.REDIRECT_URI
-import com.sozonov.gitlabx.auth.store.AuthStateAdapter
 import com.sozonov.gitlabx.auth.store.AuthStateStore
+import com.sozonov.gitlabx.auth.store.CloudAuthState
 import com.sozonov.gitlabx.auth.store.IAuthState
 import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
 import com.sozonov.gitlabx.navigation.Destination
@@ -20,7 +20,11 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.openid.appauth.*
+import net.openid.appauth.AuthState
+import net.openid.appauth.AuthorizationRequest
+import net.openid.appauth.AuthorizationService
+import net.openid.appauth.AuthorizationServiceConfiguration
+import net.openid.appauth.ResponseTypeValues
 
 class AuthService(context: Context, private val userCache: IUserCache) :
     AuthorizationService(context) {
@@ -74,7 +78,7 @@ class AuthService(context: Context, private val userCache: IUserCache) :
     suspend fun <TResult> performWithActualToken(action: suspend (token: String) -> TResult): TResult? {
         val state = getState()
 
-        if (state is AuthStateAdapter) {
+        if (state is CloudAuthState) {
             val authState = state.state
             if (!authState.needsTokenRefresh) {
                 if (authState.accessToken == null) {
@@ -101,12 +105,14 @@ class AuthService(context: Context, private val userCache: IUserCache) :
                 store.clear()
             }
 
-            is AuthStateAdapter -> {
+            is CloudAuthState -> {
                 store.clear()
             }
         }
         userCache.deleteUser()
-        Navigation.destination = Destination(Navigation.Routes.SIGN_IN, popUpRoute = true)
+        withContext(Dispatchers.Main) {
+            Navigation.destination = Destination(Navigation.Routes.SIGN_IN, popUpRoute = true)
+        }
     }
 
     fun provideAuthIntent(): Intent = getAuthorizationRequestIntent(authRequest)

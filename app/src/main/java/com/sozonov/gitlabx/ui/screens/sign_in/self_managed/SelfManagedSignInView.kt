@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,8 @@ fun SelfManagedView(
     var fetchingUser by rememberSaveable {
         mutableStateOf(false)
     }
+
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -109,6 +112,7 @@ fun SelfManagedView(
         )
         Spacer(modifier = Modifier.height(24.dp))
         OutlinedButton(onClick = {
+            focusManager.clearFocus()
             fetchingUser = true
             viewModel.fetchUser(server, accessToken)
         }, enabled = !fetchingUser && (server.isNotBlank() && accessToken.isNotBlank())) {

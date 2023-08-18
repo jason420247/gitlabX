@@ -64,21 +64,21 @@ class AuthStateStore private constructor(private val context: Context) {
     }
 
     suspend fun handleResponse(response: AuthorizationResponse?, ex: AuthorizationException?): AuthState {
-        var current = (getCurrent() as? AuthStateAdapter)?.state
+        var current = (getCurrent() as? CloudAuthState)?.state
         if (current == null) {
             current = AuthState()
         }
         current.update(response, ex)
-        return (replace(AuthStateAdapter(current)) as AuthStateAdapter).state
+        return (replace(CloudAuthState(current)) as CloudAuthState).state
     }
 
     suspend fun handleResponse(response: TokenResponse?, ex: AuthorizationException?): AuthState {
-        var current = (getCurrent() as? AuthStateAdapter)?.state
+        var current = (getCurrent() as? CloudAuthState)?.state
         if (current == null) {
             current = AuthState()
         }
         current.update(response, ex)
-        return (replace(AuthStateAdapter(current)) as AuthStateAdapter).state
+        return (replace(CloudAuthState(current)) as CloudAuthState).state
     }
 
     suspend fun clear() {
@@ -94,24 +94,25 @@ class AuthStateStore private constructor(private val context: Context) {
 
     private suspend fun readState(): IAuthState<*> {
         try {
-            val stateJson = context.mPrefs.data.map { preferences -> preferences[STORE_KEY] }.first()
-                ?: return AuthStateAdapter(AuthState())
+            val stateJson =
+                context.mPrefs.data.map { preferences -> preferences[STORE_KEY] }.first()
+                    ?: return CloudAuthState(AuthState())
             return try {
                 Json.decodeFromString<SelfManagedAuthState>(stateJson)
             } catch (exc: SerializationException) {
                 try {
-                    return AuthStateAdapter(AuthState.jsonDeserialize(stateJson))
+                    return CloudAuthState(AuthState.jsonDeserialize(stateJson))
                 } catch (exc: JSONException) {
                     Log.e(TAG, exc.message, exc)
-                    return AuthStateAdapter(AuthState())
+                    return CloudAuthState(AuthState())
                 }
             } catch (exc: IllegalArgumentException) {
                 Log.e(TAG, exc.message, exc)
-                return AuthStateAdapter(AuthState())
+                return CloudAuthState(AuthState())
             }
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
-            return AuthStateAdapter(AuthState())
+            return CloudAuthState(AuthState())
         }
     }
 
