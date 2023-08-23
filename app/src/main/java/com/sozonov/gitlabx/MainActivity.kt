@@ -24,9 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.AuthService.Companion.AUTH_TAG
 import com.sozonov.gitlabx.navigation.Destination
@@ -36,6 +38,7 @@ import com.sozonov.gitlabx.snackbar.SnackbarData
 import com.sozonov.gitlabx.ui.screens.sign_in.cloud.CloudSignInViewModel
 import com.sozonov.gitlabx.ui.screens.sign_in.cloud.SingInView
 import com.sozonov.gitlabx.ui.screens.sign_in.self_managed.SelfManagedView
+import com.sozonov.gitlabx.ui.screens.welcome.WelcomeView
 import com.sozonov.gitlabx.ui.theme.GitlabXTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -92,7 +95,7 @@ class MainActivity : ComponentActivity() {
                             if (user.errorMessage == null) {
                                 checkNotNull(user.id)
                                 Navigation.destination =
-                                    Destination(Navigation.Routes.WELCOME, true)
+                                    Destination(Navigation.Routes.WELCOME + user.fullName, true)
                                 return@collect
                             }
                             Snackbar.show = SnackbarData(user.errorMessage)
@@ -147,6 +150,16 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
+                            composable(
+                                Navigation.Routes.WELCOME + "{fullName}",
+                                arguments = listOf(navArgument("fullName") {
+                                    type = NavType.StringType
+                                })
+                            ) { backStackEntry ->
+                                val user = backStackEntry.arguments?.getString("fullName")
+                                    ?: throw IllegalArgumentException("Welcome screen should contains full name of the user")
+                                WelcomeView(user)
+                            }
                         }
                     }
                 }

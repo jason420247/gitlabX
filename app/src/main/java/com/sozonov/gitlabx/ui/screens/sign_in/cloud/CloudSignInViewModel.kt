@@ -23,7 +23,7 @@ class CloudSignInViewModel(private val userRepository: IUserRepository) : ViewMo
             try {
                 val user = userRepository.fetchUser()
                 withContext(Dispatchers.Main) {
-                    userState = UserState(user.id)
+                    userState = UserState(user.id, user.fullName)
                 }
             } catch (e: IOException) {
                 produceUserError("Failed fetch user")
@@ -36,7 +36,7 @@ class CloudSignInViewModel(private val userRepository: IUserRepository) : ViewMo
     }
 
     fun produceUserError(error: String) {
-        userState = UserState(null, error)
+        userState = UserState(errorMessage = error)
     }
 }
 

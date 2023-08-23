@@ -42,11 +42,11 @@ class SelfManagedSignInViewModel(
     private suspend fun fetchUser() {
         val user = userRepository.fetchUser()
         withContext(Dispatchers.Main) {
-            userState = UserState(user.id)
+            userState = UserState(user.id, user.fullName)
         }
     }
 
     private fun produceUserError(error: String) {
-        userState = UserState(null, error)
+        userState = UserState(errorMessage = error)
     }
 }
