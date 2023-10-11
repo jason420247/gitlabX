@@ -46,9 +46,13 @@ android {
     android.defaultConfig.manifestPlaceholders = [
             'appAuthRedirectScheme': 'com.sozonov.gitlabx'
     ]
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
+    // ktor
     implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-android:$ktor_version"
     implementation "io.ktor:ktor-client-logging:$ktor_version"
@@ -56,9 +60,10 @@ dependencies {
     implementation "io.ktor:ktor-serialization-kotlinx-json:$ktor_version"
     implementation("io.ktor:ktor-client-auth:$ktor_version")
 
+    // realm
     implementation("io.realm.kotlin:library-base:1.8.0")
 
-
+    // android
     implementation "androidx.datastore:datastore-preferences:1.0.0"
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
@@ -67,23 +72,30 @@ dependencies {
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation 'androidx.compose.material3:material3:1.2.0-alpha09'
 
+    // nav
     implementation "androidx.navigation:navigation-compose:$compose_nav_version"
 
+    // auth
     implementation 'net.openid:appauth:0.11.1'
 
+    // serialization
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
 
+    // koin
     implementation "io.insert-koin:koin-androidx-compose:$compose_koin_version"
     implementation "io.insert-koin:koin-androidx-compose-navigation:$compose_koin_version"
-    implementation "io.insert-koin:koin-android:3.4.2"
+    implementation "io.insert-koin:koin-android:$compose_koin_version"
+    testImplementation "io.insert-koin:koin-test:$compose_koin_version"
+    testImplementation "io.insert-koin:koin-test-junit4:$compose_koin_version"
 
+    // testing, debug
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 
-    testImplementation "io.insert-koin:koin-test:$compose_koin_version"
-    testImplementation "io.insert-koin:koin-test-junit4:$compose_koin_version"
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    testImplementation "org.mockito:mockito-core:5.6.0"
+    testImplementation "org.mockito.kotlin:mockito-kotlin:5.1.0"
 }

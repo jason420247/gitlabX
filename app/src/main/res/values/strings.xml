@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">GitlabX</string>
+    <string name="label_server">Server</string>
+    <string name="label_access_token">Access token</string>
+    <string name="support_text_don_t_forget_select_scope_api">Don\'t forget select scope: api</string>
+    <string name="support_text_e_g_https_gitlab_com">e.g. https://gitlab.com/</string>
+    <string name="btn_save">Save</string>
+    <string name="text_welcome">Welcome, %1$s</string>
+    <string name="error_request_cancelled">Request cancelled</string>
+    <string name="error_authorization_error">Authorization error</string>
+    <string name="error_error">error</string>
+    <string name="auth_response_code_saved">auth response code saved</string>
+    <string name="auth_tokens_saved">auth tokens saved</string>
+    <string name="error_unknown_code_response">unknown code response</string>
+    <string name="error_welcome_screen_should_contains_full_name_of_the_user">Welcome screen should contains full name of the user</string>
 </resources>

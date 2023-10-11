@@ -8,6 +8,6 @@ plugins {
 ext {
     compose_version = '1.5.0'
     compose_nav_version = '2.7.4'
-    compose_koin_version = '3.4.5'
+    compose_koin_version = '3.5.0'
     ktor_version = '2.3.1'
 }

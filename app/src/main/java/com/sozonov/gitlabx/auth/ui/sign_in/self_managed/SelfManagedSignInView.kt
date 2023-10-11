@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.screens.sign_in.self_managed
+package com.sozonov.gitlabx.auth.ui.sign_in.self_managed
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,9 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.flowWithLifecycle
+import com.sozonov.gitlabx.R
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.snackbar.Snackbar
@@ -81,7 +83,9 @@ fun SelfManagedView(
                 server = it
                 checkServerValue(it)
             },
-            label = { Text("Server") }, isError = serverError,
+            label = { Text(stringResource(R.string.label_server)) },
+            supportingText = {Text(stringResource(R.string.support_text_e_g_https_gitlab_com))},
+            isError = serverError,
             modifier = Modifier.fillMaxWidth(1f),
             maxLines = 1,
             keyboardOptions = KeyboardOptions(
@@ -99,7 +103,8 @@ fun SelfManagedView(
                 accessToken = it
                 checkAccessTokenValue(it)
             },
-            label = { Text("Access Token") },
+            label = { Text(stringResource(R.string.label_access_token)) },
+            supportingText = { Text(stringResource(R.string.support_text_don_t_forget_select_scope_api))},
             isError = accessTokenError,
             modifier = Modifier.fillMaxWidth(1f),
             maxLines = 1,
@@ -120,7 +125,7 @@ fun SelfManagedView(
             if (fetchingUser) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
-                Text("Save")
+                Text(stringResource(R.string.btn_save))
             }
         }
     }
