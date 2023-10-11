@@ -111,7 +111,8 @@ class AuthService(context: Application, private val userCache: IUserCache) :
         }
         userCache.deleteUser()
         withContext(Dispatchers.Main) {
-            Navigation.destination = Destination(Navigation.Routes.SIGN_IN, popUpRoute = true)
+            Navigation.destination =
+                Destination(Navigation.Routes.SIGN_IN, popUpRoute = Navigation.Routes.SIGN_IN)
         }
     }
 

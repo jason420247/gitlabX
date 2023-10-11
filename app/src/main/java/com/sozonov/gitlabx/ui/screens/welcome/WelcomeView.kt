@@ -17,6 +17,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sozonov.gitlabx.R
+import com.sozonov.gitlabx.navigation.Destination
+import com.sozonov.gitlabx.navigation.Navigation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -41,7 +43,8 @@ fun WelcomeView(userFullName: String) {
         LaunchedEffect(lifecycle) {
             launch {
                 delay(1000)
-                //  Navigation.destination =
+                Navigation.destination =
+                    Destination(Navigation.Routes.PROJECTS, popUpRoute = Navigation.Routes.SIGN_IN)
             }
         }
     }

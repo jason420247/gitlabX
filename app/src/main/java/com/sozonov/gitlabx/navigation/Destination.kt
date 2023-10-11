@@ -6,9 +6,9 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class Destination(
     val route: String,
-    val popUpRoute: Boolean = false,
+    val popUpRoute: String? = null,
     val inclusive: Boolean = true,
-    val launchSingleTop: Boolean = false,
+    val launchSingleTop: Boolean = true,
     val data: Parcelable? = null
 ) {
     override fun toString(): String =

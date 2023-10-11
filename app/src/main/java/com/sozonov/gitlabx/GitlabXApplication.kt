@@ -2,7 +2,7 @@ package com.sozonov.gitlabx
 
 import android.app.Application
 import android.util.Log
-import com.sozonov.gitlabx.di.appModule
+import com.sozonov.gitlabx.di.rootModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -18,7 +18,7 @@ class GitlabXApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@GitlabXApplication)
-            modules(appModule)
+            modules(rootModule)
         }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,8 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,8 +41,9 @@ import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.snackbar.Snackbar
 import com.sozonov.gitlabx.snackbar.SnackbarData
-import com.sozonov.gitlabx.ui.screens.welcome.WelcomeView
 import com.sozonov.gitlabx.theme.GitlabXTheme
+import com.sozonov.gitlabx.ui.screen.projects.ProjectsView
+import com.sozonov.gitlabx.ui.screens.welcome.WelcomeView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -51,71 +55,85 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MainActivity : ComponentActivity() {
     private val mAuthService by inject<AuthService>()
     private val mAuthResultLauncher = registerForActivityAuthResult()
-    private val signInViewModel by viewModel<CloudSignInViewModel>()
+    private val cloudSignInViewModel by viewModel<CloudSignInViewModel>()
+    private val mainViewModel by viewModel<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        createView()
+        collectUserCreatedState()
+    }
+
+    private fun registerForActivityAuthResult() =
+        registerForActivityResult(StartActivityForResult()) { result ->
+            when (result.resultCode) {
+                Activity.RESULT_CANCELED -> {
+                    cloudSignInViewModel.produceUserError(getString(R.string.error_request_cancelled))
+                }
+
+                Activity.RESULT_OK -> {
+                    val data = result.data
+                    data?.run {
+                        val resp = AuthorizationResponse.fromIntent(data)
+                        val exc = AuthorizationException.fromIntent(data)
+                        lifecycleScope.launch(Dispatchers.IO) Code@{
+                            mAuthService.store.handleResponse(resp, exc)
+                            if (exc != null || resp == null) {
+                                cloudSignInViewModel.produceUserError(getString(R.string.error_authorization_error))
+                                Log.e(
+                                    AUTH_TAG,
+                                    exc?.message ?: getString(R.string.error_error),
+                                    exc
+                                )
+                                return@Code
+                            }
+                            Log.i(AUTH_TAG, getString(R.string.auth_response_code_saved))
+                            mAuthService.performTokenRequest(
+                                resp.createTokenExchangeRequest()
+                            ) { responseToken, exc ->
+                                lifecycleScope.launch(Dispatchers.IO) Token@{
+                                    mAuthService.store.handleResponse(responseToken, exc)
+                                    if (exc != null || responseToken == null) {
+                                        cloudSignInViewModel.produceUserError(getString(R.string.error_authorization_error))
+                                        Log.e(
+                                            AUTH_TAG,
+                                            exc?.message ?: getString(R.string.error_error),
+                                            exc
+                                        )
+                                        return@Token
+                                    }
+                                    Log.i(AUTH_TAG, getString(R.string.auth_tokens_saved))
+                                    cloudSignInViewModel.fetchUser()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                else -> {
+                    Log.wtf(AUTH_TAG, getString(R.string.error_unknown_code_response))
+                }
+            }
+        }
+
+    private fun createView() {
         setContent {
             var gitlabCloudAuthProcessing by rememberSaveable {
                 mutableStateOf(false)
             }
             val navController = rememberNavController()
             val lifecycle = LocalLifecycleOwner.current.lifecycle
-            LaunchedEffect(lifecycle) {
-                snapshotFlow { Navigation.destination }
-                    .flowWithLifecycle(lifecycle)
-                    .collect { dest ->
-                        if (dest != null) {
-                            if (dest.popUpRoute) {
-                                navController.navigate(dest.route) {
-                                    if (dest.launchSingleTop) {
-                                        launchSingleTop = true
-                                        return@navigate
-                                    }
-                                    popUpTo(dest.route) {
-                                        inclusive = dest.inclusive
-                                    }
-                                    Log.i(Navigation.TAG, "navigating to $dest")
-                                }
-                            }
-                            if (!dest.popUpRoute) {
-                                navController.navigate(dest.route)
-                                Log.i(Navigation.TAG, "navigating to $dest")
-                            }
-                            Navigation.destination = null
-                        }
-                    }
+
+            lifecycle.apply {
+                CollectNavDestination(navController)
+                CollectUserState { gitlabCloudAuthProcessing = it }
             }
-            LaunchedEffect(lifecycle) {
-                snapshotFlow { signInViewModel.userState }
-                    .flowWithLifecycle(lifecycle)
-                    .collect { user ->
-                        if (user.id != null || user.errorMessage != null) {
-                            gitlabCloudAuthProcessing = false
-                            if (user.errorMessage == null) {
-                                checkNotNull(user.id)
-                                Navigation.destination =
-                                    Destination(Navigation.Routes.WELCOME + user.fullName, true)
-                                return@collect
-                            }
-                            Snackbar.show = SnackbarData(user.errorMessage)
-                        }
-                    }
-            }
+
             GitlabXTheme {
                 val snackbarHostState = remember { SnackbarHostState() }
+                lifecycle.CollectSnackbar(snackbarHostState)
 
-                LaunchedEffect(lifecycle) {
-                    snapshotFlow { Snackbar.show }.flowWithLifecycle(lifecycle)
-                        .distinctUntilChanged().collect { data ->
-                            if (data != null) {
-                                snackbarHostState.showSnackbar(
-                                    message = data.message,
-                                    duration = data.duration
-                                )
-                            }
-                        }
-                }
                 Scaffold(
                     snackbarHost = {
                         SnackbarHost(hostState = snackbarHostState)
@@ -154,9 +172,13 @@ class MainActivity : ComponentActivity() {
                                     type = NavType.StringType
                                 })
                             ) { backStackEntry ->
-                                val user = backStackEntry.arguments?.getString(Navigation.Routes.Args.WELCOME_FULL_NAME)
-                                    ?: throw IllegalArgumentException(getString(R.string.error_welcome_screen_should_contains_full_name_of_the_user))
+                                val user =
+                                    backStackEntry.arguments?.getString(Navigation.Routes.Args.WELCOME_FULL_NAME)
+                                        ?: throw IllegalArgumentException(getString(R.string.error_welcome_screen_should_contains_full_name_of_the_user))
                                 WelcomeView(user)
+                            }
+                            composable(Navigation.Routes.PROJECTS) {
+                                ProjectsView()
                             }
                         }
                     }
@@ -165,47 +187,70 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun registerForActivityAuthResult() =
-        registerForActivityResult(StartActivityForResult()) { result ->
-            when (result.resultCode) {
-                Activity.RESULT_CANCELED -> {
-                    signInViewModel.produceUserError(getString(R.string.error_request_cancelled))
+    private fun collectUserCreatedState() {
+        lifecycleScope.launch {
+            mainViewModel.userCreated.flowWithLifecycle(lifecycle, Lifecycle.State.CREATED)
+                .collect { user ->
+                    Navigation.destination =
+                        Destination(
+                            Navigation.Routes.WELCOME + user.fullName,
+                            Navigation.Routes.WELCOME
+                        )
                 }
+        }
+    }
 
-                Activity.RESULT_OK -> {
-                    val data = result.data
-                    data?.run {
-                        val resp = AuthorizationResponse.fromIntent(data)
-                        val exc = AuthorizationException.fromIntent(data)
-                        lifecycleScope.launch(Dispatchers.IO) Code@{
-                            mAuthService.store.handleResponse(resp, exc)
-                            if (exc != null || resp == null) {
-                                signInViewModel.produceUserError(getString(R.string.error_authorization_error))
-                                Log.e(AUTH_TAG, exc?.message ?: getString(R.string.error_error), exc)
-                                return@Code
-                            }
-                            Log.i(AUTH_TAG, getString(R.string.auth_response_code_saved))
-                            mAuthService.performTokenRequest(
-                                resp.createTokenExchangeRequest()
-                            ) { responseToken, exc ->
-                                lifecycleScope.launch(Dispatchers.IO) Token@{
-                                    mAuthService.store.handleResponse(responseToken, exc)
-                                    if (exc != null || responseToken == null) {
-                                        signInViewModel.produceUserError(getString(R.string.error_authorization_error))
-                                        Log.e(AUTH_TAG, exc?.message ?: getString(R.string.error_error), exc)
-                                        return@Token
-                                    }
-                                    Log.i(AUTH_TAG, getString(R.string.auth_tokens_saved))
-                                    signInViewModel.fetchUser()
+    @Composable
+    private fun Lifecycle.CollectSnackbar(snackbarHostState: SnackbarHostState) {
+        LaunchedEffect(this) {
+            snapshotFlow { Snackbar.show }.flowWithLifecycle(lifecycle)
+                .distinctUntilChanged().collect { data ->
+                    if (data != null) {
+                        snackbarHostState.showSnackbar(
+                            message = data.message,
+                            duration = data.duration
+                        )
+                    }
+                }
+        }
+    }
+
+    @Composable
+    private fun Lifecycle.CollectUserState(onProcessingChange: (flag: Boolean) -> Unit) {
+        LaunchedEffect(this) {
+            snapshotFlow { cloudSignInViewModel.userState }
+                .flowWithLifecycle(lifecycle)
+                .collect { user ->
+                    if (user.id != null || user.errorMessage != null) {
+                        onProcessingChange(false)
+                        if (user.errorMessage != null) {
+                            Snackbar.show = SnackbarData(user.errorMessage)
+                        }
+
+                    }
+                }
+        }
+    }
+
+    @Composable
+    private fun Lifecycle.CollectNavDestination(navController: NavHostController) {
+        LaunchedEffect(this) {
+            snapshotFlow { Navigation.destination }
+                .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
+                .collect { dest ->
+                    if (dest != null) {
+                        navController.navigate(dest.route) {
+                            restoreState = true
+                            launchSingleTop = dest.launchSingleTop
+                            if (dest.popUpRoute != null) {
+                                popUpTo(dest.popUpRoute) {
+                                    inclusive = dest.inclusive
+                                    saveState = true
                                 }
                             }
                         }
                     }
                 }
-
-                else -> {
-                    Log.wtf(AUTH_TAG, getString(R.string.error_unknown_code_response))
-                }
-            }
         }
+    }
 }
