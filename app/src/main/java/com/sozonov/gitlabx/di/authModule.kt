@@ -7,7 +7,9 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val authModule = module {
-    single { AuthService(get(), get()) }
     viewModel { SelfManagedSignInViewModel(get(), get()) }
     viewModel { CloudSignInViewModel(get()) }
+}
+internal val internalAuthModule = module {
+    single { AuthService(get(), get()) }
 }
