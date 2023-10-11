@@ -31,15 +31,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.AuthService.Companion.AUTH_TAG
+import com.sozonov.gitlabx.auth.ui.sign_in.cloud.CloudSignInViewModel
+import com.sozonov.gitlabx.auth.ui.sign_in.cloud.SingInView
+import com.sozonov.gitlabx.auth.ui.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.snackbar.Snackbar
 import com.sozonov.gitlabx.snackbar.SnackbarData
-import com.sozonov.gitlabx.ui.screens.sign_in.cloud.CloudSignInViewModel
-import com.sozonov.gitlabx.ui.screens.sign_in.cloud.SingInView
-import com.sozonov.gitlabx.ui.screens.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.ui.screens.welcome.WelcomeView
-import com.sozonov.gitlabx.ui.theme.GitlabXTheme
+import com.sozonov.gitlabx.theme.GitlabXTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -132,32 +132,30 @@ class MainActivity : ComponentActivity() {
                             startDestination = Navigation.Routes.SIGN_IN
                         ) {
                             composable(Navigation.Routes.SIGN_IN) {
-                                fun doAuthorization() {
-                                    gitlabCloudAuthProcessing = true
-                                    mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
-                                }
 
-                                fun doNavigationToSetupSelfManaged() {
-                                    lifecycleScope.launch {
-                                        Navigation.destination =
-                                            Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
-                                    }
-                                }
                                 SingInView(
-                                    doOnGitlabCloud = ::doAuthorization,
-                                    doOnGitlabSelfManaged = ::doNavigationToSetupSelfManaged,
+                                    doOnGitlabCloud = {
+                                        gitlabCloudAuthProcessing = true
+                                        mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
+                                    },
+                                    doOnGitlabSelfManaged = {
+                                        launch {
+                                            Navigation.destination =
+                                                Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
+                                        }
+                                    },
                                     gitlabCloudAuthProcessing = gitlabCloudAuthProcessing
                                 )
                             }
                             composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
                             composable(
-                                Navigation.Routes.WELCOME + "{fullName}",
-                                arguments = listOf(navArgument("fullName") {
+                                Navigation.Routes.WELCOME + "{${Navigation.Routes.Args.WELCOME_FULL_NAME}}",
+                                arguments = listOf(navArgument(Navigation.Routes.Args.WELCOME_FULL_NAME) {
                                     type = NavType.StringType
                                 })
                             ) { backStackEntry ->
-                                val user = backStackEntry.arguments?.getString("fullName")
-                                    ?: throw IllegalArgumentException("Welcome screen should contains full name of the user")
+                                val user = backStackEntry.arguments?.getString(Navigation.Routes.Args.WELCOME_FULL_NAME)
+                                    ?: throw IllegalArgumentException(getString(R.string.error_welcome_screen_should_contains_full_name_of_the_user))
                                 WelcomeView(user)
                             }
                         }
@@ -171,7 +169,7 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(StartActivityForResult()) { result ->
             when (result.resultCode) {
                 Activity.RESULT_CANCELED -> {
-                    signInViewModel.produceUserError("Request cancelled")
+                    signInViewModel.produceUserError(getString(R.string.error_request_cancelled))
                 }
 
                 Activity.RESULT_OK -> {
@@ -182,22 +180,22 @@ class MainActivity : ComponentActivity() {
                         lifecycleScope.launch(Dispatchers.IO) Code@{
                             mAuthService.store.handleResponse(resp, exc)
                             if (exc != null || resp == null) {
-                                signInViewModel.produceUserError("Authorization error")
-                                Log.e(AUTH_TAG, exc?.message ?: "error", exc)
+                                signInViewModel.produceUserError(getString(R.string.error_authorization_error))
+                                Log.e(AUTH_TAG, exc?.message ?: getString(R.string.error_error), exc)
                                 return@Code
                             }
-                            Log.i(AUTH_TAG, "auth response code saved")
+                            Log.i(AUTH_TAG, getString(R.string.auth_response_code_saved))
                             mAuthService.performTokenRequest(
                                 resp.createTokenExchangeRequest()
                             ) { responseToken, exc ->
                                 lifecycleScope.launch(Dispatchers.IO) Token@{
                                     mAuthService.store.handleResponse(responseToken, exc)
                                     if (exc != null || responseToken == null) {
-                                        signInViewModel.produceUserError("Authorization error")
-                                        Log.e(AUTH_TAG, exc?.message ?: "error", exc)
+                                        signInViewModel.produceUserError(getString(R.string.error_authorization_error))
+                                        Log.e(AUTH_TAG, exc?.message ?: getString(R.string.error_error), exc)
                                         return@Token
                                     }
-                                    Log.i(AUTH_TAG, "auth tokens saved")
+                                    Log.i(AUTH_TAG, getString(R.string.auth_tokens_saved))
                                     signInViewModel.fetchUser()
                                 }
                             }
@@ -206,7 +204,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 else -> {
-                    Log.wtf(AUTH_TAG, "unknown code response")
+                    Log.wtf(AUTH_TAG, getString(R.string.error_unknown_code_response))
                 }
             }
         }

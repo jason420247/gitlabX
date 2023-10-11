@@ -1,6 +1,6 @@
 package com.sozonov.gitlabx.auth
 
-import android.content.Context
+import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -26,7 +26,7 @@ import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
 
-class AuthService(context: Context, private val userCache: IUserCache) :
+class AuthService(context: Application, private val userCache: IUserCache) :
     AuthorizationService(context) {
     val store = AuthStateStore.getInstance(context.applicationContext)
     private val serviceConfig = AuthorizationServiceConfiguration(

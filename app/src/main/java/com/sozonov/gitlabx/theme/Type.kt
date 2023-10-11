@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.theme
+package com.sozonov.gitlabx.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

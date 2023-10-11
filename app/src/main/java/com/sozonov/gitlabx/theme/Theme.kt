@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.theme
+package com.sozonov.gitlabx.theme
 
 import android.app.Activity
 import android.os.Build

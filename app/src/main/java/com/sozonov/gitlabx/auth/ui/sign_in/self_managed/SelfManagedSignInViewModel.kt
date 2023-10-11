@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.screens.sign_in.cloud
+package com.sozonov.gitlabx.auth.ui.sign_in.self_managed
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -7,24 +7,28 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sozonov.gitlabx.auth.AuthService
-import com.sozonov.gitlabx.ui.screens.sign_in.UserState
+import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
+import com.sozonov.gitlabx.auth.ui.sign_in.UserState
 import com.sozonov.gitlabx.user.IUserRepository
 import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class CloudSignInViewModel(private val userRepository: IUserRepository) : ViewModel() {
+class SelfManagedSignInViewModel(
+    private val mAuthService: AuthService,
+    private val userRepository: IUserRepository
+) : ViewModel() {
     var userState by mutableStateOf(UserState())
         private set
 
-    fun fetchUser() {
+    fun fetchUser(server: String, token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val user = userRepository.fetchUser()
-                withContext(Dispatchers.Main) {
-                    userState = UserState(user.id, user.fullName)
-                }
+                val state = SelfManagedAuthState(server, token)
+                mAuthService.saveState(state)
+                Log.i(AuthService.AUTH_TAG, "auth tokens saved")
+                fetchUser()
             } catch (e: IOException) {
                 produceUserError("Failed fetch user")
                 Log.e(AuthService.AUTH_TAG, e.message, e)
@@ -35,8 +39,14 @@ class CloudSignInViewModel(private val userRepository: IUserRepository) : ViewMo
         }
     }
 
-    fun produceUserError(error: String) {
+    private suspend fun fetchUser() {
+        val user = userRepository.fetchUser()
+        withContext(Dispatchers.Main) {
+            userState = UserState(user.id, user.fullName)
+        }
+    }
+
+    private fun produceUserError(error: String) {
         userState = UserState(errorMessage = error)
     }
 }
-

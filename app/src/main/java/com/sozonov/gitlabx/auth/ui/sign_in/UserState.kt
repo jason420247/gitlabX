@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.screens.sign_in
+package com.sozonov.gitlabx.auth.ui.sign_in
 
 import androidx.compose.runtime.Immutable
 

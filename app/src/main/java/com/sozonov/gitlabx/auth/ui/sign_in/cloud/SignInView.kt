@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.screens.sign_in.cloud
+package com.sozonov.gitlabx.auth.ui.sign_in.cloud
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,16 +13,18 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.sozonov.gitlabx.ui.theme.Typography
+import com.sozonov.gitlabx.theme.Typography
 import com.sozonov.gitlabx.utils.delegates.Action
+import com.sozonov.gitlabx.utils.delegates.CoroutineAction
 
 @Composable
 fun SingInView(
     doOnGitlabCloud: Action,
-    doOnGitlabSelfManaged: Action,
+    doOnGitlabSelfManaged: CoroutineAction,
     gitlabCloudAuthProcessing: Boolean
 ) {
 
@@ -31,6 +33,7 @@ fun SingInView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        val scope = rememberCoroutineScope()
 
         Text("Welcome to GitlabX", style = Typography.titleLarge)
 
@@ -60,7 +63,9 @@ fun SingInView(
             Spacer(Modifier.height(16.dp))
 
             ElevatedButton(
-                onClick = doOnGitlabSelfManaged,
+                onClick = {
+                    doOnGitlabSelfManaged(scope)
+                },
                 modifier = Modifier.fillMaxWidth(0.7f),
                 enabled = !gitlabCloudAuthProcessing
             ) {

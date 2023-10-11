@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.screens.sign_in.self_managed
+package com.sozonov.gitlabx.auth.ui.sign_in.cloud
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -7,28 +7,24 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sozonov.gitlabx.auth.AuthService
-import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
-import com.sozonov.gitlabx.ui.screens.sign_in.UserState
+import com.sozonov.gitlabx.auth.ui.sign_in.UserState
 import com.sozonov.gitlabx.user.IUserRepository
 import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SelfManagedSignInViewModel(
-    private val mAuthService: AuthService,
-    private val userRepository: IUserRepository
-) : ViewModel() {
+class CloudSignInViewModel(private val userRepository: IUserRepository) : ViewModel() {
     var userState by mutableStateOf(UserState())
         private set
 
-    fun fetchUser(server: String, token: String) {
+    fun fetchUser() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val state = SelfManagedAuthState(server, token)
-                mAuthService.saveState(state)
-                Log.i(AuthService.AUTH_TAG, "auth tokens saved")
-                fetchUser()
+                val user = userRepository.fetchUser()
+                withContext(Dispatchers.Main) {
+                    userState = UserState(user.id, user.fullName)
+                }
             } catch (e: IOException) {
                 produceUserError("Failed fetch user")
                 Log.e(AuthService.AUTH_TAG, e.message, e)
@@ -39,14 +35,8 @@ class SelfManagedSignInViewModel(
         }
     }
 
-    private suspend fun fetchUser() {
-        val user = userRepository.fetchUser()
-        withContext(Dispatchers.Main) {
-            userState = UserState(user.id, user.fullName)
-        }
-    }
-
-    private fun produceUserError(error: String) {
+    fun produceUserError(error: String) {
         userState = UserState(errorMessage = error)
     }
 }
+

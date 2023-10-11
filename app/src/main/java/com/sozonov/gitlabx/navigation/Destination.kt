@@ -1,7 +1,9 @@
 package com.sozonov.gitlabx.navigation
 
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 
+@Immutable
 data class Destination(
     val route: String,
     val popUpRoute: Boolean = false,

@@ -12,9 +12,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sozonov.gitlabx.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -28,7 +30,7 @@ fun WelcomeView(userFullName: String) {
         val lifecycle = LocalLifecycleOwner.current.lifecycle
 
         Text(
-            text = "Welcome, $userFullName",
+            text = stringResource(R.string.text_welcome, userFullName),
             fontSize = 32.sp,
             textAlign = TextAlign.Center,
             lineHeight = 40.sp
