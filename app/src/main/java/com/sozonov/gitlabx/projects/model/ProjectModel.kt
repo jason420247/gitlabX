@@ -10,8 +10,12 @@ data class ProjectModel(
     val name: String,
     val nameWithNamespace: String,
     val createdAt: ZonedDateTime,
+    val updatedAt: ZonedDateTime,
+    val lastActivityAt: ZonedDateTime,
     val visibility: String,
     val defaultBranch: String,
     val readmeUrl: String,
-    val metrics: ProjectMetrics
+    val metrics: ProjectMetrics,
+    val isMeCreator: Boolean,
+    val avatarUrl: String?
 )

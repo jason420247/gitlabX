@@ -16,6 +16,7 @@ import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.user.dal.IUserCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ProducerScope
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -41,7 +42,7 @@ class AuthService(context: Application, private val userCache: IUserCache) :
     )
 
     private val authRequest =
-        authRequestBuilder.setScopes("openid", "email", "profile", "api", "read_user").build()
+        authRequestBuilder.setScopes("openid", "email", "profile", "api").build()
 
     suspend fun getState() = withContext(Dispatchers.IO) { store.getCurrent() }
     suspend fun saveState(state: IAuthState<*>) = store.replace(state)
@@ -88,6 +89,7 @@ class AuthService(context: Application, private val userCache: IUserCache) :
             }
             val perform = callbackFlow {
                 performActionWithFreshTokens(authState, this, action)
+                awaitClose()
             }
             return perform.first()
         }
