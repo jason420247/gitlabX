@@ -1,5 +1,6 @@
-package com.sozonov.gitlabx.user
+package com.sozonov.gitlabx.user.repository
 
+import com.sozonov.gitlabx.user.model.UserState
 import kotlinx.coroutines.flow.Flow
 
 interface IUserStateObserver{

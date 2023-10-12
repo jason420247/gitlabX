@@ -1,7 +1,9 @@
-package com.sozonov.gitlabx.user
+package com.sozonov.gitlabx.user.repository
 
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.common.BaseRepository
+import com.sozonov.gitlabx.user.dal.IUserCache
+import com.sozonov.gitlabx.user.model.UserModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get

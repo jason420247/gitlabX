@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.ui.sign_in.UserState
-import com.sozonov.gitlabx.user.IUserRepository
+import com.sozonov.gitlabx.user.repository.IUserRepository
 import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

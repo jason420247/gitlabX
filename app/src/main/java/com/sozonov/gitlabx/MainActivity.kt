@@ -39,17 +39,18 @@ import com.sozonov.gitlabx.auth.ui.sign_in.cloud.SingInView
 import com.sozonov.gitlabx.auth.ui.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
+import com.sozonov.gitlabx.projects.ProjectsView
 import com.sozonov.gitlabx.snackbar.Snackbar
 import com.sozonov.gitlabx.snackbar.SnackbarData
 import com.sozonov.gitlabx.theme.GitlabXTheme
-import com.sozonov.gitlabx.ui.screen.projects.ProjectsView
-import com.sozonov.gitlabx.ui.screens.welcome.WelcomeView
+import com.sozonov.gitlabx.welcome.WelcomeView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.koin.android.ext.android.inject
+import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
@@ -119,66 +120,68 @@ class MainActivity : ComponentActivity() {
 
     private fun createView() {
         setContent {
-            var gitlabCloudAuthProcessing by rememberSaveable {
-                mutableStateOf(false)
-            }
-            val navController = rememberNavController()
-            val lifecycle = LocalLifecycleOwner.current.lifecycle
+            KoinAndroidContext {
+                var gitlabCloudAuthProcessing by rememberSaveable {
+                    mutableStateOf(false)
+                }
+                val navController = rememberNavController()
+                val lifecycle = LocalLifecycleOwner.current.lifecycle
 
-            lifecycle.apply {
-                CollectNavDestination(navController)
-                CollectUserState { gitlabCloudAuthProcessing = it }
-            }
+                lifecycle.apply {
+                    CollectNavDestination(navController)
+                    CollectUserState { gitlabCloudAuthProcessing = it }
+                }
 
-            GitlabXTheme {
-                val snackbarHostState = remember { SnackbarHostState() }
-                lifecycle.CollectSnackbar(snackbarHostState)
+                GitlabXTheme {
+                    val snackbarHostState = remember { SnackbarHostState() }
+                    lifecycle.CollectSnackbar(snackbarHostState)
 
-                Scaffold(
-                    snackbarHost = {
-                        SnackbarHost(hostState = snackbarHostState)
-                    }
-                ) { padding ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        NavHost(
-                            navController = navController,
-                            startDestination = Navigation.Routes.SIGN_IN
+                    Scaffold(
+                        snackbarHost = {
+                            SnackbarHost(hostState = snackbarHostState)
+                        }
+                    ) { padding ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding),
+                            color = MaterialTheme.colorScheme.background
                         ) {
-                            composable(Navigation.Routes.SIGN_IN) {
+                            NavHost(
+                                navController = navController,
+                                startDestination = Navigation.Routes.SIGN_IN
+                            ) {
+                                composable(Navigation.Routes.SIGN_IN) {
 
-                                SingInView(
-                                    doOnGitlabCloud = {
-                                        gitlabCloudAuthProcessing = true
-                                        mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
-                                    },
-                                    doOnGitlabSelfManaged = {
-                                        launch {
-                                            Navigation.destination =
-                                                Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
-                                        }
-                                    },
-                                    gitlabCloudAuthProcessing = gitlabCloudAuthProcessing
-                                )
-                            }
-                            composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
-                            composable(
-                                Navigation.Routes.WELCOME + "{${Navigation.Routes.Args.WELCOME_FULL_NAME}}",
-                                arguments = listOf(navArgument(Navigation.Routes.Args.WELCOME_FULL_NAME) {
-                                    type = NavType.StringType
-                                })
-                            ) { backStackEntry ->
-                                val user =
-                                    backStackEntry.arguments?.getString(Navigation.Routes.Args.WELCOME_FULL_NAME)
-                                        ?: throw IllegalArgumentException(getString(R.string.error_welcome_screen_should_contains_full_name_of_the_user))
-                                WelcomeView(user)
-                            }
-                            composable(Navigation.Routes.PROJECTS) {
-                                ProjectsView()
+                                    SingInView(
+                                        doOnGitlabCloud = {
+                                            gitlabCloudAuthProcessing = true
+                                            mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
+                                        },
+                                        doOnGitlabSelfManaged = {
+                                            launch {
+                                                Navigation.destination =
+                                                    Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
+                                            }
+                                        },
+                                        gitlabCloudAuthProcessing = gitlabCloudAuthProcessing
+                                    )
+                                }
+                                composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
+                                composable(
+                                    Navigation.Routes.WELCOME + "{${Navigation.Routes.Args.WELCOME_FULL_NAME}}",
+                                    arguments = listOf(navArgument(Navigation.Routes.Args.WELCOME_FULL_NAME) {
+                                        type = NavType.StringType
+                                    })
+                                ) { backStackEntry ->
+                                    val user =
+                                        backStackEntry.arguments?.getString(Navigation.Routes.Args.WELCOME_FULL_NAME)
+                                            ?: throw IllegalArgumentException(getString(R.string.error_welcome_screen_should_contains_full_name_of_the_user))
+                                    WelcomeView(user)
+                                }
+                                composable(Navigation.Routes.PROJECTS) {
+                                    ProjectsView()
+                                }
                             }
                         }
                     }
@@ -196,6 +199,15 @@ class MainActivity : ComponentActivity() {
                             Navigation.Routes.WELCOME + user.fullName,
                             Navigation.Routes.WELCOME
                         )
+                }
+        }
+    }
+
+    private fun collectUserDeletedState() {
+        lifecycleScope.launch {
+            mainViewModel.userDeleted.flowWithLifecycle(lifecycle, Lifecycle.State.CREATED)
+                .collect { user ->
+                    // todo
                 }
         }
     }

@@ -1,8 +1,8 @@
 package com.sozonov.gitlabx
 
 import androidx.lifecycle.ViewModel
-import com.sozonov.gitlabx.user.IUserRepository
-import com.sozonov.gitlabx.user.IUserStateObserver
+import com.sozonov.gitlabx.user.repository.IUserRepository
+import com.sozonov.gitlabx.user.repository.IUserStateObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map

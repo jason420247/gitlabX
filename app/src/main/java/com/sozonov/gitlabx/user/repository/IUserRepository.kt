@@ -1,4 +1,6 @@
-package com.sozonov.gitlabx.user
+package com.sozonov.gitlabx.user.repository
+
+import com.sozonov.gitlabx.user.model.UserModel
 
 interface IUserRepository {
     suspend fun getUser(): UserModel

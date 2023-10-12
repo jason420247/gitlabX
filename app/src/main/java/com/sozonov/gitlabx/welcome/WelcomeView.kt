@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.ui.screens.welcome
+package com.sozonov.gitlabx.welcome
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

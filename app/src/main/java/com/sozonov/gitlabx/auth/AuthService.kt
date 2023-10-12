@@ -13,7 +13,7 @@ import com.sozonov.gitlabx.auth.store.IAuthState
 import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
-import com.sozonov.gitlabx.user.IUserCache
+import com.sozonov.gitlabx.user.dal.IUserCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.callbackFlow

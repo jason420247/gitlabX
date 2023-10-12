@@ -1,7 +1,9 @@
-package com.sozonov.gitlabx.user
+package com.sozonov.gitlabx.user.dal
 
 import android.util.Log
-import com.sozonov.gitlabx.user.dal.UserDao
+import com.sozonov.gitlabx.user.model.UserModel
+import com.sozonov.gitlabx.user.model.UserState
+import com.sozonov.gitlabx.user.repository.IUserStateObserver
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.ext.query
@@ -11,7 +13,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import java.util.concurrent.CancellationException
 
 internal class UserRealmImpl(private val config: RealmConfiguration) : IUserCache,

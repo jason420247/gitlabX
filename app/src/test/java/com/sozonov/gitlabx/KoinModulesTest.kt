@@ -3,7 +3,8 @@ package com.sozonov.gitlabx
 import android.app.Application
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.di.authModule
-import com.sozonov.gitlabx.di.httpClient
+import com.sozonov.gitlabx.di.httpClientModule
+import com.sozonov.gitlabx.di.projectsModule
 import com.sozonov.gitlabx.di.userModule
 import io.realm.kotlin.RealmConfiguration
 import org.junit.Rule
@@ -24,7 +25,7 @@ class KoinModulesTest : KoinTest {
     @Test
     fun verifyKoinApp() {
         koinApplication {
-            modules(authModule, httpClient, userModule)
+            modules(authModule, httpClientModule, userModule, projectsModule)
             checkModules {
                 withInstance<Application>()
                 withInstance<RealmConfiguration>()

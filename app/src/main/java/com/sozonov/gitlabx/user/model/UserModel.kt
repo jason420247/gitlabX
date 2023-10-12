@@ -1,4 +1,4 @@
-package com.sozonov.gitlabx.user
+package com.sozonov.gitlabx.user.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
