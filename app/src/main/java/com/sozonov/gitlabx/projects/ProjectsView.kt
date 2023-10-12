@@ -88,7 +88,11 @@ private fun StubAvatar(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 1f))
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(text = letter.uppercaseChar().toString(), fontSize = fontSize)
+            Text(
+                text = letter.uppercaseChar().toString(),
+                fontSize = fontSize,
+                style = MaterialTheme.typography.titleLarge
+            )
         }
     }
 
