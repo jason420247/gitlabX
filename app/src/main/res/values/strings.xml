@@ -13,4 +13,8 @@
     <string name="auth_tokens_saved">auth tokens saved</string>
     <string name="error_unknown_code_response">unknown code response</string>
     <string name="error_welcome_screen_should_contains_full_name_of_the_user">Welcome screen should contains full name of the user</string>
+    <string name="welcome_to_gitlabx">Welcome to GitlabX</string>
+    <string name="sign_in">Sign in</string>
+    <string name="gitlab_cloud">Gitlab Cloud</string>
+    <string name="gitlab_self_managed">Gitlab self-managed</string>
 </resources>

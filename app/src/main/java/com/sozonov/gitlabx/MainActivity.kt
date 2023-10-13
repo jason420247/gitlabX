@@ -159,10 +159,8 @@ class MainActivity : ComponentActivity() {
                                             mAuthResultLauncher.launch(mAuthService.provideAuthIntent())
                                         },
                                         doOnGitlabSelfManaged = {
-                                            launch {
-                                                Navigation.destination =
-                                                    Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
-                                            }
+                                            Navigation.destination =
+                                                Destination(Navigation.Routes.SELF_MANAGED_SIGN_IN)
                                         },
                                         gitlabCloudAuthProcessing = gitlabCloudAuthProcessing
                                     )

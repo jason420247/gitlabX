@@ -4,7 +4,7 @@ import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 
 @Immutable
-data class Destination(
+class Destination(
     val route: String,
     val popUpRoute: String? = null,
     val inclusive: Boolean = true,
