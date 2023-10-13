@@ -1,7 +1,7 @@
 package com.sozonov.gitlabx.projects.model
 
 import androidx.compose.runtime.Immutable
-import java.time.ZonedDateTime
+import kotlinx.datetime.Instant
 
 @Immutable
 data class ProjectModel(
@@ -9,10 +9,10 @@ data class ProjectModel(
     val description: String?,
     val name: String,
     val nameWithNamespace: String,
-    val createdAt: ZonedDateTime,
-    val updatedAt: ZonedDateTime,
-    val lastActivityAt: ZonedDateTime,
-    val visibility: String,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+    val lastActivityAt: Instant,
+    val isPrivate: Boolean,
     val defaultBranch: String,
     val readmeUrl: String,
     val metrics: ProjectMetrics,

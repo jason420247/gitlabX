@@ -17,4 +17,20 @@
     <string name="sign_in">Sign in</string>
     <string name="gitlab_cloud">Gitlab Cloud</string>
     <string name="gitlab_self_managed">Gitlab self-managed</string>
+    <string name="private_repo">private</string>
+    <string name="public_repo">public</string>
+    <string name="default_branch">default branch</string>
+    <string name="stars">stars</string>
+    <string name="forks">forks</string>
+    <string name="merge_requests">merge requests</string>
+    <string name="issues">issues</string>
+    <string name="project_updated">project updated</string>
+    <string name="recently">few seconds ago</string>
+    <string name="more_than_1_year">more than 1 year</string>
+    <string name="minutes_ago">%1$s min ago</string>
+    <string name="hours_ago">%1$s h ago</string>
+    <string name="days_ago">%1$s d ago</string>
+    <string name="weeks_ago">%1$s w ago</string>
+    <string name="months_ago">%1$s m ago</string>
+    <string name="year_ago">year ago</string>
 </resources>

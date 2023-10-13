@@ -17,7 +17,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import java.time.ZonedDateTime
+import kotlinx.datetime.Instant
+
+private const val PRIVATE = "private"
 
 internal class ProjectsRepositoryImpl(
     private val userRepository: IUserRepository,
@@ -42,9 +44,9 @@ internal class ProjectsRepositoryImpl(
                         description = pr.description,
                         name = pr.name,
                         nameWithNamespace = pr.name_with_namespace,
-                        createdAt = ZonedDateTime.parse(pr.created_at),
-                        updatedAt = ZonedDateTime.parse(pr.updated_at),
-                        lastActivityAt = ZonedDateTime.parse(pr.last_activity_at),
+                        createdAt = Instant.parse(pr.created_at),
+                        updatedAt = Instant.parse(pr.updated_at),
+                        lastActivityAt = Instant.parse(pr.last_activity_at),
                         defaultBranch = pr.default_branch,
                         metrics = ProjectMetrics(
                             pr.star_count,
@@ -52,7 +54,7 @@ internal class ProjectsRepositoryImpl(
                             pr.open_issues_count,
                             mrCount
                         ),
-                        visibility = pr.visibility,
+                        isPrivate = pr.visibility == PRIVATE,
                         readmeUrl = pr.readme_url,
                         isMeCreator = pr.creator_id == currentUserId,
                         avatarUrl = pr.avatar_url
