@@ -39,7 +39,7 @@ import com.sozonov.gitlabx.auth.ui.sign_in.cloud.SingInView
 import com.sozonov.gitlabx.auth.ui.sign_in.self_managed.SelfManagedView
 import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
-import com.sozonov.gitlabx.projects.ProjectsView
+import com.sozonov.gitlabx.projects.view.Projects
 import com.sozonov.gitlabx.snackbar.Snackbar
 import com.sozonov.gitlabx.snackbar.SnackbarData
 import com.sozonov.gitlabx.theme.GitlabXTheme
@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
                                     WelcomeView(user)
                                 }
                                 composable(Navigation.Routes.PROJECTS) {
-                                    ProjectsView()
+                                    Projects()
                                 }
                             }
                         }

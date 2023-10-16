@@ -11,7 +11,7 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val projectsModule = module {
-    if (!BuildConfig.DEBUG) {
+    if (BuildConfig.DEBUG) {
         singleOf(::ProjectRepositoryStub) bind IProjectsRepository::class
     } else {
         singleOf(::ProjectsRepositoryImpl) bind IProjectsRepository::class
