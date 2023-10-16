@@ -29,7 +29,7 @@ import net.openid.appauth.ResponseTypeValues
 
 class AuthService(context: Application, private val userCache: IUserCache) :
     AuthorizationService(context) {
-    val store = AuthStateStore.getInstance(context.applicationContext)
+    val store = AuthStateStore.create(context.applicationContext)
     private val serviceConfig = AuthorizationServiceConfiguration(
         Uri.parse("${ENDPOINT}authorize"),
         Uri.parse("${ENDPOINT}token")
@@ -101,16 +101,8 @@ class AuthService(context: Application, private val userCache: IUserCache) :
         return null
     }
 
-    suspend fun logout() {
-        when (getState()) {
-            is SelfManagedAuthState -> {
-                store.clear()
-            }
-
-            is CloudAuthState -> {
-                store.clear()
-            }
-        }
+    suspend fun logout() = withContext(Dispatchers.IO) {
+        store.clear()
         userCache.deleteUser()
         withContext(Dispatchers.Main) {
             Navigation.destination =

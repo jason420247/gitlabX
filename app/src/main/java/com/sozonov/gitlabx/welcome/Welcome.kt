@@ -9,6 +9,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -21,31 +24,44 @@ import com.sozonov.gitlabx.navigation.Destination
 import com.sozonov.gitlabx.navigation.Navigation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun WelcomeView(userFullName: String) {
+fun Welcome(viewModel: WelcomeViewModel = koinViewModel()) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        val userFullName by remember {
+            derivedStateOf { viewModel.user.value?.fullName }
+        }
+        val userReady by remember {
+            derivedStateOf { viewModel.user.value != null }
+        }
+
         val lifecycle = LocalLifecycleOwner.current.lifecycle
 
+        LaunchedEffect(userReady, lifecycle) {
+            if (userReady) {
+                launch {
+                    delay(500)
+                    Navigation.destination =
+                        Destination(
+                            Navigation.Routes.PROJECTS,
+                            popUpRoute = Navigation.Routes.WELCOME
+                        )
+                }
+            }
+        }
+
         Text(
-            text = stringResource(R.string.text_welcome, userFullName),
+            text = if (userReady) stringResource(R.string.text_welcome, userFullName!!) else "",
             fontSize = 32.sp,
             textAlign = TextAlign.Center,
             lineHeight = 40.sp
         )
         Spacer(modifier = Modifier.height(32.dp))
         CircularProgressIndicator()
-
-        LaunchedEffect(lifecycle) {
-            launch {
-                delay(1000)
-                Navigation.destination =
-                    Destination(Navigation.Routes.PROJECTS, popUpRoute = Navigation.Routes.SIGN_IN)
-            }
-        }
     }
 }

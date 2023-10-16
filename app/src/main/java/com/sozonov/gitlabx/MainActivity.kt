@@ -27,11 +27,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.sozonov.gitlabx.auth.AuthService
 import com.sozonov.gitlabx.auth.AuthService.Companion.AUTH_TAG
 import com.sozonov.gitlabx.auth.ui.sign_in.cloud.CloudSignInViewModel
@@ -43,7 +41,7 @@ import com.sozonov.gitlabx.projects.view.Projects
 import com.sozonov.gitlabx.snackbar.Snackbar
 import com.sozonov.gitlabx.snackbar.SnackbarData
 import com.sozonov.gitlabx.theme.GitlabXTheme
-import com.sozonov.gitlabx.welcome.WelcomeView
+import com.sozonov.gitlabx.welcome.Welcome
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -57,13 +55,11 @@ class MainActivity : ComponentActivity() {
     private val mAuthService by inject<AuthService>()
     private val mAuthResultLauncher = registerForActivityAuthResult()
     private val cloudSignInViewModel by viewModel<CloudSignInViewModel>()
-    private val mainViewModel by viewModel<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         createView()
-        collectUserCreatedState()
     }
 
     private fun registerForActivityAuthResult() =
@@ -149,7 +145,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             NavHost(
                                 navController = navController,
-                                startDestination = Navigation.Routes.SIGN_IN
+                                startDestination = Navigation.Routes.HOME
                             ) {
                                 composable(Navigation.Routes.SIGN_IN) {
                                     SingInView(
@@ -165,16 +161,8 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 composable(Navigation.Routes.SELF_MANAGED_SIGN_IN) { SelfManagedView() }
-                                composable(
-                                    Navigation.Routes.WELCOME + "{${Navigation.Routes.Args.WELCOME_FULL_NAME}}",
-                                    arguments = listOf(navArgument(Navigation.Routes.Args.WELCOME_FULL_NAME) {
-                                        type = NavType.StringType
-                                    })
-                                ) { backStackEntry ->
-                                    val user =
-                                        backStackEntry.arguments?.getString(Navigation.Routes.Args.WELCOME_FULL_NAME)
-                                            ?: throw IllegalArgumentException(getString(R.string.error_welcome_screen_should_contains_full_name_of_the_user))
-                                    WelcomeView(user)
+                                composable(Navigation.Routes.WELCOME) {
+                                    Welcome()
                                 }
                                 composable(Navigation.Routes.PROJECTS) {
                                     Projects()
@@ -184,28 +172,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-    }
-
-    private fun collectUserCreatedState() {
-        lifecycleScope.launch {
-            mainViewModel.userCreated.flowWithLifecycle(lifecycle, Lifecycle.State.CREATED)
-                .collect { user ->
-                    Navigation.destination =
-                        Destination(
-                            Navigation.Routes.WELCOME + user.fullName,
-                            Navigation.Routes.WELCOME
-                        )
-                }
-        }
-    }
-
-    private fun collectUserDeletedState() {
-        lifecycleScope.launch {
-            mainViewModel.userDeleted.flowWithLifecycle(lifecycle, Lifecycle.State.CREATED)
-                .collect { user ->
-                    // todo
-                }
         }
     }
 
