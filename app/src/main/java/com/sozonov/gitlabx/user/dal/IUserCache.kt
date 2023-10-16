@@ -1,4 +1,6 @@
-package com.sozonov.gitlabx.user
+package com.sozonov.gitlabx.user.dal
+
+import com.sozonov.gitlabx.user.model.UserModel
 
 interface IUserCache {
     suspend fun saveUser(userModel: UserModel)

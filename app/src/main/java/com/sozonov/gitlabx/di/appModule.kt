@@ -1,7 +1,9 @@
 package com.sozonov.gitlabx.di
 
+import com.sozonov.gitlabx.MainViewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
-    includes(authModule, internalAuthModule, httpClient, userModule, databaseModule)
+    viewModel { MainViewModel(get(), get()) }
 }

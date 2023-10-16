@@ -69,7 +69,7 @@ fun SelfManagedView(
                             checkNotNull(user.id)
                             fetchingUser = false
                             Navigation.destination =
-                                Destination(Navigation.Routes.WELCOME + user.fullName, true)
+                                Destination(Navigation.Routes.WELCOME + user.fullName)
                             return@collect
                         }
                         fetchingUser = false

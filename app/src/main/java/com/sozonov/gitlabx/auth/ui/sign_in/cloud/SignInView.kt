@@ -11,20 +11,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.sozonov.gitlabx.theme.Typography
+import com.sozonov.gitlabx.R
 import com.sozonov.gitlabx.utils.delegates.Action
-import com.sozonov.gitlabx.utils.delegates.CoroutineAction
 
 @Composable
 fun SingInView(
     doOnGitlabCloud: Action,
-    doOnGitlabSelfManaged: CoroutineAction,
+    doOnGitlabSelfManaged: Action,
     gitlabCloudAuthProcessing: Boolean
 ) {
 
@@ -35,11 +36,14 @@ fun SingInView(
     ) {
         val scope = rememberCoroutineScope()
 
-        Text("Welcome to GitlabX", style = Typography.titleLarge)
+        Text(
+            stringResource(R.string.welcome_to_gitlabx),
+            style = MaterialTheme.typography.titleLarge
+        )
 
         Spacer(Modifier.height(24.dp))
 
-        Text("Sign in", style = Typography.displayMedium)
+        Text(stringResource(R.string.sign_in), style = MaterialTheme.typography.displayMedium)
 
         Spacer(Modifier.height(24.dp))
 
@@ -49,7 +53,10 @@ fun SingInView(
                 modifier = Modifier.fillMaxWidth(0.7f),
                 enabled = !gitlabCloudAuthProcessing
             ) {
-                Text("Gitlab Cloud", style = Typography.bodyLarge)
+                Text(
+                    stringResource(R.string.gitlab_cloud),
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Spacer(modifier = Modifier.width(4.dp))
                 Box(modifier = Modifier.width(16.dp)) {
                     if (gitlabCloudAuthProcessing)
@@ -64,12 +71,15 @@ fun SingInView(
 
             ElevatedButton(
                 onClick = {
-                    doOnGitlabSelfManaged(scope)
+                    doOnGitlabSelfManaged()
                 },
                 modifier = Modifier.fillMaxWidth(0.7f),
                 enabled = !gitlabCloudAuthProcessing
             ) {
-                Text("Gitlab self-managed", style = Typography.bodyLarge)
+                Text(
+                    stringResource(R.string.gitlab_self_managed),
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
         }
     }

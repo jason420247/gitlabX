@@ -18,6 +18,7 @@ interface Navigation {
             const val SIGN_IN = "SIGN_IN"
             const val SELF_MANAGED_SIGN_IN = "SELF_MANAGED_SIGN_IN"
             const val WELCOME = "WELCOME/"
+            const val PROJECTS = "PROJECTS"
         }
 
         interface Args{
