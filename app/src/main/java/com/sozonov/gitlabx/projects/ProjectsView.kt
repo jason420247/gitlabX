@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,8 +28,12 @@ import coil.compose.AsyncImage
 import com.sozonov.gitlabx.R
 import com.sozonov.gitlabx.projects.model.ProjectMetrics
 import com.sozonov.gitlabx.projects.model.ProjectModel
+import com.sozonov.gitlabx.utils.compose.pullrefresh.PullRefreshIndicator
+import com.sozonov.gitlabx.utils.compose.pullrefresh.pullRefresh
+import com.sozonov.gitlabx.utils.compose.pullrefresh.rememberPullRefreshState
 import com.sozonov.gitlabx.utils.compose.spacer.HorizontalSpacer
 import com.sozonov.gitlabx.utils.compose.spacer.VerticalSpacer
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.koin.androidx.compose.koinViewModel
@@ -36,13 +42,28 @@ import org.koin.androidx.compose.koinViewModel
 fun ProjectsView(projectsViewModel: ProjectsViewModel = koinViewModel()) {
 
     val projects by projectsViewModel.projects.collectAsState()
-
-    Column {
+    val refreshScope = rememberCoroutineScope()
+    val pullState =
+        rememberPullRefreshState(refreshing = projectsViewModel.loadingState.value, onRefresh = {
+            refreshScope.launch {
+                projectsViewModel.updateProjects()
+            }
+        })
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullState)
+    ) {
         LazyColumn {
             items(projects, key = { p -> p.id }) { pr ->
                 ProjectItem(pr)
             }
         }
+        PullRefreshIndicator(
+            modifier = Modifier.align(alignment = Alignment.TopCenter),
+            refreshing = projectsViewModel.loadingState.value,
+            state = pullState,
+        )
     }
 }
 
