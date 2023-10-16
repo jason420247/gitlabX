@@ -152,7 +152,6 @@ class MainActivity : ComponentActivity() {
                                 startDestination = Navigation.Routes.SIGN_IN
                             ) {
                                 composable(Navigation.Routes.SIGN_IN) {
-
                                     SingInView(
                                         doOnGitlabCloud = {
                                             gitlabCloudAuthProcessing = true

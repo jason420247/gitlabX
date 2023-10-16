@@ -20,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -91,7 +90,6 @@ private fun ProjectItem(project: ProjectModel) {
 }
 
 @Composable
-@Preview
 private fun ProjectsMetrics(metrics: ProjectMetrics = ProjectMetrics(0, 0, 0, 0)) {
     val metric = @Composable { res: Int, desc: Int, count: Int ->
         AsyncImage(
@@ -118,7 +116,6 @@ private fun ProjectsMetrics(metrics: ProjectMetrics = ProjectMetrics(0, 0, 0, 0)
 @Composable
 private fun ProjectDates(lastActivity: Instant) {
     val diff = Clock.System.now().minus(lastActivity)
-    //   val isRecently = diff.inWholeSeconds <= 59
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -170,7 +167,7 @@ private fun MeCreator() {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Text(
-            text = "Owner",
+            text = stringResource(R.string.owner),
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 8.sp,
                 color = MaterialTheme.colorScheme.outlineVariant

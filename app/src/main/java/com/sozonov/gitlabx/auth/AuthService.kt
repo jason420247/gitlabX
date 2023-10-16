@@ -54,29 +54,29 @@ class AuthService(context: Application, private val userCache: IUserCache) :
         private suspend fun <TResult> AuthService.performActionWithFreshTokens(
             authState: AuthState,
             producer: ProducerScope<TResult?>,
-            action: suspend (token: String) -> TResult
+            action: suspend (accessToken: String?, refreshToken: String?) -> TResult
         ) {
-            authState.performActionWithFreshTokens(this) Refresh@{ accessToken,
-                                                                   _,
-                                                                   exc ->
-                if (exc != null) {
-                    producer.trySend(null)
-                    Log.e(AUTH_TAG, exc.message ?: "error", exc)
-                    return@Refresh
+            val service = this
+            authState.performActionWithFreshTokens(service) { accessToken,
+                                                              refreshToken,
+                                                              exc ->
+                producer.launch {
+                    if (exc != null) {
+                        producer.send(null)
+                        Log.e(AUTH_TAG, exc.message ?: "error", exc)
+                    }
+                    if (accessToken == null) {
+                        producer.send(null)
+                        Log.e(AUTH_TAG, "Access token is empty")
+                    }
+                    producer.send(action.invoke(accessToken, refreshToken))
                 }
-                if (accessToken == null) {
-                    producer.trySend(null)
-                    Log.e(AUTH_TAG, "Access token is empty")
-                    return@Refresh
-                }
-                producer.launch(Dispatchers.IO) {
-                    producer.send(action.invoke(accessToken))
-                }
+
             }
         }
     }
 
-    suspend fun <TResult> performWithActualToken(action: suspend (token: String) -> TResult): TResult? {
+    suspend fun <TResult> performWithActualToken(action: suspend (accessToken: String?, refreshToken: String?) -> TResult): TResult? {
         val state = getState()
 
         if (state is CloudAuthState) {
@@ -85,7 +85,7 @@ class AuthService(context: Application, private val userCache: IUserCache) :
                 if (authState.accessToken == null) {
                     return null
                 }
-                return action.invoke(authState.accessToken!!)
+                return action.invoke(authState.accessToken, authState.refreshToken)
             }
             val perform = callbackFlow {
                 performActionWithFreshTokens(authState, this, action)
@@ -95,7 +95,7 @@ class AuthService(context: Application, private val userCache: IUserCache) :
         }
 
         if (state is SelfManagedAuthState) {
-            return action.invoke(state.accessToken)
+            return action.invoke(state.accessToken, null)
         }
 
         return null

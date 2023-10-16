@@ -58,8 +58,8 @@ val httpClientModule = module {
             install(Auth) {
                 bearer {
                     loadTokens {
-                        authService.performWithActualToken { token ->
-                            BearerTokens(token, "")
+                        authService.performWithActualToken { access, refresh ->
+                            BearerTokens(access ?: "", refresh ?: "")
                         }
                     }
                 }
