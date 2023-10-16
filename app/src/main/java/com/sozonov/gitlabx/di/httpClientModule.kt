@@ -59,6 +59,9 @@ val httpClientModule = module {
                 bearer {
                     loadTokens {
                         authService.performWithActualToken { access, refresh ->
+                            if (access == null) {
+                                authService.logout()
+                            }
                             BearerTokens(access ?: "", refresh ?: "")
                         }
                     }
