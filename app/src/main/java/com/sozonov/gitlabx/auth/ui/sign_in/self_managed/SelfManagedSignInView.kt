@@ -69,7 +69,7 @@ fun SelfManagedView(
                             checkNotNull(user.id)
                             fetchingUser = false
                             Navigation.destination =
-                                Destination(Navigation.Routes.WELCOME + user.fullName)
+                                Destination(Navigation.Routes.WELCOME)
                             return@collect
                         }
                         fetchingUser = false
@@ -84,7 +84,7 @@ fun SelfManagedView(
                 checkServerValue(it)
             },
             label = { Text(stringResource(R.string.label_server)) },
-            supportingText = {Text(stringResource(R.string.support_text_e_g_https_gitlab_com))},
+            supportingText = { Text(stringResource(R.string.support_text_e_g_https_gitlab_com)) },
             isError = serverError,
             modifier = Modifier.fillMaxWidth(1f),
             maxLines = 1,
@@ -104,7 +104,7 @@ fun SelfManagedView(
                 checkAccessTokenValue(it)
             },
             label = { Text(stringResource(R.string.label_access_token)) },
-            supportingText = { Text(stringResource(R.string.support_text_don_t_forget_select_scope_api))},
+            supportingText = { Text(stringResource(R.string.support_text_don_t_forget_select_scope_api)) },
             isError = accessTokenError,
             modifier = Modifier.fillMaxWidth(1f),
             maxLines = 1,

@@ -37,7 +37,7 @@ fun Projects(projectsViewModel: ProjectsViewModel = koinViewModel()) {
             .pullRefresh(pullState)
     ) {
         LazyColumn {
-            items(projects, key = { p -> p.id }) { pr ->
+            items(projects, key = { p -> p.id }, contentType = { "project" }) { pr ->
                 ProjectItem(pr)
             }
         }

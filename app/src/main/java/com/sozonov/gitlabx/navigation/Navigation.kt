@@ -19,12 +19,11 @@ interface Navigation {
             const val SELF_MANAGED_SIGN_IN = "SELF_MANAGED_SIGN_IN"
             const val WELCOME = "WELCOME/"
             const val PROJECTS = "PROJECTS"
+            var HOME = ""
         }
 
-        interface Args{
-            companion object{
-                const val WELCOME_FULL_NAME = "fullName"
-            }
+        interface Args {
+            companion object
         }
     }
 }
