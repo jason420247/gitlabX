@@ -10,6 +10,6 @@ import org.koin.dsl.module
 
 val userModule = module {
     singleOf(::UserRealmImpl) binds arrayOf(IUserCache::class)
-    single<IUserRepository> { UserRepositoryImpl(get(), get(), get()) }
+    single<IUserRepository> { UserRepositoryImpl(get(), get()) }
 }
 

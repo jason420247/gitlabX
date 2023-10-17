@@ -1,7 +1,5 @@
 package com.sozonov.gitlabx.user.repository
 
-import com.sozonov.gitlabx.auth.AuthService
-import com.sozonov.gitlabx.common.BaseRepository
 import com.sozonov.gitlabx.user.dal.IUserCache
 import com.sozonov.gitlabx.user.model.UserModel
 import io.ktor.client.HttpClient
@@ -12,9 +10,8 @@ import kotlinx.coroutines.withContext
 
 internal class UserRepositoryImpl(
     private val userCache: IUserCache,
-    httpClient: HttpClient,
-    authService: AuthService
-) : IUserRepository, BaseRepository(httpClient, authService) {
+    private val httpClient: HttpClient
+) : IUserRepository {
 
     @Volatile
     private var mUser: UserModel? = null
@@ -30,7 +27,7 @@ internal class UserRepositoryImpl(
     }
 
     override suspend fun fetchUser(): UserModel = withContext(Dispatchers.IO) {
-        val remoteUser = provideApiClient().get("user").body<UserModel>()
+        val remoteUser = httpClient.get("user").body<UserModel>()
         saveUser(remoteUser)
         remoteUser
     }

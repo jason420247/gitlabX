@@ -1,10 +1,6 @@
 package com.sozonov.gitlabx.utils.httpClient
 
-import com.sozonov.gitlabx.auth.AuthService
-import com.sozonov.gitlabx.auth.store.CloudAuthState
-import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.defaultRequest
+import com.sozonov.gitlabx.configuration.IApplicationConfiguration
 
 class HttpClientWithBasePathBuilder private constructor() {
 
@@ -13,25 +9,15 @@ class HttpClientWithBasePathBuilder private constructor() {
         private const val versionPath = "v4/"
 
         @JvmStatic
-        suspend fun buildApiClient(httpClient: HttpClient, authService: AuthService): HttpClient {
-            val authState = authService.getState()
+        fun buildApiPath(): String {
+            val configuration = IApplicationConfiguration.INSTANCE
             val baseUrl = StringBuilder()
-            if (authState is CloudAuthState) {
-                baseUrl.append("https://gitlab.com/")
-            }
-            if (authState is SelfManagedAuthState) {
-                baseUrl.append(authState.server).also {
-                    if (authState.server.last() != '/') {
-                        it.append("/")
-                    }
-                }
+            baseUrl.append(configuration.apiUrl)
+            if (configuration.apiUrl.last() != '/') {
+                baseUrl.append("/")
             }
             baseUrl.append(apiPath).append(versionPath)
-            return httpClient.config {
-                defaultRequest {
-                    url(baseUrl.toString())
-                }
-            }
+            return baseUrl.toString()
         }
     }
 }

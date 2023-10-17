@@ -1,7 +1,5 @@
 package com.sozonov.gitlabx.projects.repository
 
-import com.sozonov.gitlabx.auth.AuthService
-import com.sozonov.gitlabx.common.BaseRepository
 import com.sozonov.gitlabx.projects.dto.ProjectDto
 import com.sozonov.gitlabx.projects.dto.ProjectMergeRequestDto
 import com.sozonov.gitlabx.projects.model.ProjectMetrics
@@ -24,12 +22,11 @@ private const val PRIVATE = "private"
 internal class ProjectsRepositoryImpl(
     private val userRepository: IUserRepository,
     private val httpClient: HttpClient,
-    authService: AuthService
-) : IProjectsRepository, BaseRepository(httpClient, authService) {
+) : IProjectsRepository {
     override suspend fun getProjects(order: ProjectsOrder, sort: Sort): List<ProjectModel> =
         withContext(Dispatchers.IO) {
             val currentUserId = userRepository.getUser().id
-            val projectsDtos = provideApiClient().get("projects") {
+            val projectsDtos = httpClient.get("projects") {
                 parameter("membership", true)
                 parameter("orderBy", order.value)
                 parameter("sort", sort.value)

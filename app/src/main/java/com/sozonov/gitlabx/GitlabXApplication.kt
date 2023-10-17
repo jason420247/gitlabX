@@ -3,6 +3,8 @@ package com.sozonov.gitlabx
 import android.app.Application
 import android.util.Log
 import com.sozonov.gitlabx.auth.AuthService
+import com.sozonov.gitlabx.auth.store.SelfManagedAuthState
+import com.sozonov.gitlabx.configuration.ApplicationConfigurationImpl
 import com.sozonov.gitlabx.di.rootModule
 import com.sozonov.gitlabx.navigation.Navigation
 import com.sozonov.gitlabx.user.dal.IUserCache
@@ -34,6 +36,9 @@ class GitlabXApplication : Application() {
             val state = authService.getState()
             if (state != null && user != null) {
                 Navigation.Routes.HOME = Navigation.Routes.WELCOME
+                if (state is SelfManagedAuthState) {
+                    ApplicationConfigurationImpl.selfManagedUrl = state.server
+                }
             } else {
                 Navigation.Routes.HOME = Navigation.Routes.SIGN_IN
             }
