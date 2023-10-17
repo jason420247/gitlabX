@@ -1,11 +1,13 @@
 package com.sozonov.gitlabx.welcome
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sozonov.gitlabx.R
 import com.sozonov.gitlabx.navigation.Destination
@@ -45,7 +46,7 @@ fun Welcome(viewModel: WelcomeViewModel = koinViewModel()) {
         LaunchedEffect(userReady, lifecycle) {
             if (userReady) {
                 launch {
-                    delay(500)
+                    delay(1500)
                     Navigation.destination =
                         Destination(
                             Navigation.Routes.PROJECTS,
@@ -55,13 +56,24 @@ fun Welcome(viewModel: WelcomeViewModel = koinViewModel()) {
             }
         }
 
-        Text(
-            text = if (userReady) stringResource(R.string.text_welcome, userFullName!!) else "",
-            fontSize = 32.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 40.sp
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        CircularProgressIndicator()
+        AnimatedContent(targetState = userReady, transitionSpec = {
+            fadeIn(
+                animationSpec = tween(2000)
+            ) togetherWith fadeOut(animationSpec = tween(2000))
+        }, label = "Welcome view") { ready ->
+            if (ready) {
+                Text(
+                    text = stringResource(
+                        R.string.text_welcome,
+                        userFullName!!
+                    ),
+                    fontSize = 32.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 40.sp
+                )
+            }
+        }
+
+
     }
 }
